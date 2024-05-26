@@ -1,0 +1,45 @@
+# Logs and debug files
+*.log
+logs/
+debug.log
+
+# Composer dependencies
+/vendor/
+
+/node_modules/
+
+/.env
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE specific files
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Cache and session files
+cache/
+session/
+tmp/
+*.cache
+
+# PHPUnit
+.phpunit.result.cache
+
+# General unwanted files
+*.bak
+*.swp
+*.swo
+*.tmp
+*.temp
+*.~*
+
+# npm specific
+node_modules/
+npm-debug.log
+yarn.lock
+package-lock.json
+client_secret*.json

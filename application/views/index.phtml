@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="google-signin-client_id" content="30540061275-rfdalsji88qhk94ud6k4m9fj86nv12h2.apps.googleusercontent.com">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Permissions-Policy" content="fullscreen=(self)">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://apis.google.com https://code.jquery.com; frame-src 'self' https://www.youtube.com https://accounts.google.com; style-src 'self' 'unsafe-inline'">
+    <title>Index</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" type="text/css" href="/css/cookieconsent.min.css">
+    <script src="/js/jquery-3.6.0.min.js"></script>
+    <script src="/js/cookieconsent.min.js"></script>
+    <script src="/js/main.js" defer></script>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <a href="/Index/"><img src="/images/moreplaylist.png" alt="More Playlist"></a>
+            </div>
+            <ul>
+                <?php if (isset($_SESSION['user_name'])): ?>
+                    <li>こんにちは、<?php echo htmlspecialchars($_SESSION['user_name']); ?>さん</li>
+                    <li><a href="/logout">Logout</a></li>
+                <?php else: ?>
+                    <li><a href="/Index/oauth" class="google-btn">
+                        <img src="/images/sign-in-with-google.png" alt="Sign in with Google">
+                    </a></li>
+                <?php endif; ?>
+            </ul>
+        </nav>
+        <hr>
+        <div class="search-form">
+            <form id="keywordForm" action="javascript:void(0);">
+                <input type="search" name="keyword" id="keyword" value="Lo-Fi">
+                <input type="submit" value="SEARCH">
+            </form>
+        </div>
+
+       <div class="playlist-form">
+           <form id="playlistForm" action="javascript:void(0);">
+            <select id="playlists" name="playlists">
+            <!-- 再生リストがここに表示されます -->
+            </select>
+            <input type="text" id="new_playlist_title" name="new_playlist_title" placeholder="New Playlist Name">
+            <select id="new_playlist_privacy" name="new_playlist_privacy">
+                <option value="public">public</option>
+               <option value="private">private</option>
+           </select>
+           <button type="button" id="add_to_new_playlist">Add to New Playlist</button>
+            <button type="button" id="add_to_existing_playlist">Add to Existing Playlist</button>
+            </form>
+       </div>
+
+        <div id="player_wrapper">
+            <div id="player_area" style="margin-left: 10px">
+                <iframe id="player" class="player" frameborder="0" allowfullscreen="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" title="Video Player" width="360" height="260"></iframe>
+            </div>
+            <div id="social_area">
+                <form name="f1" id="f1" data-ajax="false">
+                    <div id="share_feed_area">
+                        <div id="share_url">
+                            <!-- ログイン時にのみ表示 -->
+                            <?php 
+                            if (isset($_SESSION['token'])) {
+                                $token = json_decode($_SESSION['token'], true);
+                                if (isset($token['access_token'])): ?>
+                                    <input type="hidden" id="share_url_shorten" size="20" value="">
+                                    <input type="text" id="feed_share_url" name="feed_share_url" value="">
+                                    <a id="copyButton" data-ajax="false" onclick="updateClipboard(document.getElementById('feed_share_url').value)">copy</a>
+                                <?php endif; 
+                            } ?>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div id="videoInfo"></div>
+        </div>
+    </header>
+    <main>
+        <div class="container">
+            <p>Click on a video title to play it.</p>
+            <div id="video-list">
+                <!-- JavaScriptによって動的に動画リストが生成されます -->
+            </div>
+        </div>
+    </main>
+    <footer>
+        <p><a href="/about.html">about</a> | <a href="/term-of-use.html">term-of-use</a> | <a href="/privacy.html">privacy</a> | <a href="https://forms.gle/JGhCCV6Jmoy9hvHW6">contact</a> </p>
+        <p>&copy; 2016 More Playlist</p>
+    </footer>
+</body>
+</html>
+
