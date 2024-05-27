@@ -181,6 +181,34 @@ $(document).ready(function() {
                             $('#video-list').html('<p>Failed to load videos. ' + textStatus + ': ' + errorThrown + '</p>');
                         }
                     });
+
+                    // 共有URLを生成するAPIを呼び出す
+                    $.ajax({
+                        url: '/api/generate-share-url',
+                        method: 'GET',
+                        data: { playlistId: playlistId },
+                        success: function(data) {
+                            console.log('generate-share-url API called, data received:', data);
+                            try {
+                                if (typeof data === 'string') {
+                                    data = JSON.parse(data);
+                                }
+
+                                if (data.share_url) {
+                                    $('#feed_share_url').val(data.share_url);
+                                } else {
+                                    throw new Error('Share URL not provided');
+                                }
+                            } catch (e) {
+                                console.error('Error parsing JSON:', e);
+                                alert('Error generating share URL.');
+                            }
+                        },
+                        error: function(jqXHR, textStatus, errorThrown) {
+                            console.error('AJAX Error: ' + textStatus + ': ' + errorThrown);
+                            alert('Failed to generate share URL. ' + textStatus + ': ' + errorThrown);
+                        }
+                    });
                 }
             });
         } else {
@@ -199,82 +227,80 @@ $(document).ready(function() {
     });
 
     // 新しい再生リストを作成し、動画を追加する
-$('#add_to_new_playlist').on('click', function() {
-    var videoId = $('#videoInfo').data('current-video-id');  // 動画IDを取得
-    var playlistTitle = $('#new_playlist_title').val().trim();
-    var privacyStatus = $('#new_playlist_privacy').val();
+    $('#add_to_new_playlist').on('click', function() {
+        var videoId = $('#videoInfo').data('current-video-id');  // 動画IDを取得
+        var playlistTitle = $('#new_playlist_title').val().trim();
+        var privacyStatus = $('#new_playlist_privacy').val();
 
-    console.log('Add to new playlist clicked, videoId:', videoId, 'playlistTitle:', playlistTitle, 'privacyStatus:', privacyStatus);
+        console.log('Add to new playlist clicked, videoId:', videoId, 'playlistTitle:', playlistTitle, 'privacyStatus:', privacyStatus);
 
-    if (!videoId || !playlistTitle) {
-        alert('Please select a video and enter a playlist name.');
-        return;
-    }
-
-    var params = JSON.stringify({
-        video_id: videoId,
-        playlist_title: playlistTitle,
-        privacyStatus: privacyStatus
-    });
-
-    $.ajax({
-        url: '/api/add-playlist',
-        type: 'POST',
-        data: params,
-        contentType: 'application/json; charset=utf-8',
-        dataType: 'json',
-        success: function(data) {
-            if (data.success) {
-                alert(data.success);
-                ytVideoApp.updatePlaylistsDropdown();  // プレイリストのドロップダウンを更新
-            } else if (data.error) {
-                alert('Error: ' + data.error);
-            } else {
-                alert('Unknown error occurred');
-            }
-        },
-        error: function(xhr, status, error) {
-            alert('Failed to add video to new playlist: ' + error);
+        if (!videoId || !playlistTitle) {
+            alert('Please select a video and enter a playlist name.');
+            return;
         }
-    });
-});
 
-$('#add_to_existing_playlist').on('click', function() {
-    var videoId = $('#videoInfo').data('current-video-id');  // 動画IDを取得
-    var playlistId = $('#playlists').val();
+        var params = JSON.stringify({
+            video_id: videoId,
+            playlist_title: playlistTitle,
+            privacyStatus: privacyStatus
+        });
 
-    console.log('Add to existing playlist clicked, videoId:', videoId, 'playlistId:', playlistId);
-
-    if (!videoId || !playlistId) {
-        alert('Please select a video and a playlist.');
-        return;
-    }
-
-    var params = JSON.stringify({
-        video_id: videoId,
-        playlistId: playlistId
-    });
-
-    $.ajax({
-        url: '/api/add-to-existing-playlist',
-        type: 'POST',
-        data: params,
-        contentType: 'application/json; charset=utf-8',
-        dataType: 'json',
-        success: function(data) {
-            if (data.success) {
-                alert(data.success);
-            } else {
-                alert('Error: ' + data.error);
+        $.ajax({
+            url: '/api/add-playlist',
+            type: 'POST',
+            data: params,
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json',
+            success: function(data) {
+                if (data.success) {
+                    alert(data.success);
+                    ytVideoApp.updatePlaylistsDropdown();  // プレイリストのドロップダウンを更新
+                } else if (data.error) {
+                    alert('Error: ' + data.error);
+                } else {
+                    alert('Unknown error occurred');
+                }
+            },
+            error: function(xhr, status, error) {
+                alert('Failed to add video to new playlist: ' + error);
             }
-        },
-        error: function(xhr, status, error) {
-            alert('Failed to add video to existing playlist: ' + error);
-        }
+        });
     });
-});
 
+    $('#add_to_existing_playlist').on('click', function() {
+        var videoId = $('#videoInfo').data('current-video-id');  // 動画IDを取得
+        var playlistId = $('#playlists').val();
 
+        console.log('Add to existing playlist clicked, videoId:', videoId, 'playlistId:', playlistId);
+
+        if (!videoId || !playlistId) {
+            alert('Please select a video and a playlist.');
+            return;
+        }
+
+        var params = JSON.stringify({
+            video_id: videoId,
+            playlistId: playlistId
+        });
+
+        $.ajax({
+            url: '/api/add-to-existing-playlist',
+            type: 'POST',
+            data: params,
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json',
+            success: function(data) {
+                if (data.success) {
+                    alert(data.success);
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            },
+            error: function(xhr, status, error) {
+                alert('Failed to add video to existing playlist: ' + error);
+            }
+        });
+    });
 
     // 既存の再生リストに動画を追加
     $('#add_to_existing_playlist').on('click', function() {
@@ -316,5 +342,38 @@ $('#add_to_existing_playlist').on('click', function() {
     $('#keyword').on('input', function() {
         $('#videoInfo').removeData('current-video-id');
     });
+});
+
+$('#playlists').on('change', function() {
+    var playlistId = $(this).val();
+    console.log('Playlist changed, playlistId:', playlistId);
+    if (playlistId) {
+        $.ajax({
+            url: '/api/generate-share-url',
+            method: 'GET',
+            data: { playlistId: playlistId },
+            success: function(data) {
+                console.log('generate-share-url API called, data received:', data);
+                try {
+                    if (typeof data === 'string') {
+                        data = JSON.parse(data);
+                    }
+
+                    if (data.share_url) {
+                        $('#feed_share_url').val(data.share_url);
+                    } else {
+                        throw new Error('Share URL not provided');
+                    }
+                } catch (e) {
+                    console.error('Error parsing JSON:', e);
+                    alert('Error generating share URL.');
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('AJAX Error: ' + textStatus + ': ' + errorThrown);
+                alert('Failed to generate share URL. ' + textStatus + ': ' + errorThrown);
+            }
+        });
+    }
 });
 

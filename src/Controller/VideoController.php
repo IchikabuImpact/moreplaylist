@@ -216,14 +216,16 @@ class VideoController
 
     public function generateShareUrl(Request $request, Response $response, $args)
     {
-        $playlistId = $request->getQueryParams()['playlistId'] ?? null;
-        $privacyStatus = $request->getQueryParams()['privacyStatus'] ?? null;
-        $serverName = $_SERVER['SERVER_NAME'];
+       $playlistId = $request->getQueryParams()['playlistId'] ?? null;
+       $privacyStatus = $request->getQueryParams()['privacyStatus'] ?? 'public'; // デフォルトを 'public' に設定
+       $serverName = $_SERVER['SERVER_NAME'];
 
-        if ($playlistId && $privacyStatus !== 'private') {
+        error_log("generateShareUrl called with playlistId: $playlistId");
+
+        if ($playlistId) {
             $longUrl = "https://www.youtube.com/playlist?list=$playlistId";
-            $shortUrl = $this->getTinyUrl($longUrl);
-            $shareUrl = "https://$serverName/Index/share?feed_url=" . urlencode($shortUrl);
+            error_log("Long URL: $longUrl");
+             $shareUrl = "https://$serverName/Index/share?feed_url=" . urlencode($longUrl);
         } else {
             $shareUrl = '';
         }
@@ -231,34 +233,10 @@ class VideoController
         $response->getBody()->write(json_encode(['share_url' => $shareUrl]));
         return $response->withHeader('Content-Type', 'application/json');
     }
-    public function getTinyUrl($url)
-    {
-        $btoken = getenv('BTOKEN');
-        $apiv4 = 'https://api-ssl.bitly.com/v4/bitlinks';
-        $data = array(
-            'long_url' => $url
-        );
-        $payload = json_encode($data);
-        $header = array(
-            'Authorization: Bearer ' . $btoken,
-            'Content-Type: application/json',
-            'Content-Length: ' . strlen($payload)
-        );
 
-        $ch = curl_init($apiv4);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
-        $result = curl_exec($ch);
-        $resultToJson = json_decode($result);
 
-        if (isset($resultToJson->link)) {
-            return $resultToJson->link;
-        } else {
-            return null;
-        }
-    }
+
+
 
 public function addPlaylist(Request $request, Response $response, $args)
 {
