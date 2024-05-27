@@ -225,7 +225,7 @@ class VideoController
         if ($playlistId) {
             $longUrl = "https://www.youtube.com/playlist?list=$playlistId";
             error_log("Long URL: $longUrl");
-             $shareUrl = "https://$serverName/Index/share?feed_url=" . urlencode($longUrl);
+             $shareUrl = "https://$serverName/Index?feed_url=" . urlencode($longUrl);
         } else {
             $shareUrl = '';
         }

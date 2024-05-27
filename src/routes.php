@@ -52,13 +52,26 @@ $app->get('/', function (Request $request, Response $response, $args) {
 
 $app->get('/Index', function (Request $request, Response $response, $args) {
     $view = $this->get('view');
+    $feedUrl = $request->getQueryParams()['feed_url'] ?? null;
     $userName = isset($_SESSION['user_name']) ? $_SESSION['user_name'] : null;
 
-    if (!isset($_SESSION['token'])) {
-        return $view->render($response, 'index.phtml', ['auth_url' => '/Index/oauth', 'videos' => [], 'user_name' => $userName]);
+    if ($feedUrl) {
+        // 再生リストの動画を取得する処理を追加
+        $playlistId = getPlaylistIdFromUrl($feedUrl);
+        $videos = getVideosFromPlaylist($playlistId);
+
+        return $view->render($response, 'index.phtml', [
+            'auth_url' => '',
+            'videos' => $videos,
+            'user_name' => $userName
+        ]);
     } else {
-        // 動画一覧表示の処理はここで行う
-        return $view->render($response, 'index.phtml', ['auth_url' => '', 'videos' => [], 'user_name' => $userName]);
+        if (!isset($_SESSION['token'])) {
+            return $view->render($response, 'index.phtml', ['auth_url' => '/Index/oauth', 'videos' => [], 'user_name' => $userName]);
+        } else {
+            // 動画一覧表示の処理はここで行う
+            return $view->render($response, 'index.phtml', ['auth_url' => '', 'videos' => [], 'user_name' => $userName]);
+        }
     }
 });
 
@@ -136,7 +149,36 @@ function getPlaylistIdFromUrl($url)
 function getVideosFromPlaylist($playlistId)
 {
     // YouTube APIを使って再生リストの動画を取得する処理を実装します
-    // ここにコードを追加してください
-    return []; // ダミーの動画リストを返します
+    $client = new Google\Client();
+    $client->setAuthConfig('/var/www/moreplaylistdev/client_secret.json'); // 適切なパスに変更
+    $client->setDeveloperKey($_SERVER['GOOGLE_DEVELOPER_KEY']);
+    $client->setScopes([
+        'https://www.googleapis.com/auth/youtube',
+        'https://www.googleapis.com/auth/youtube.force-ssl',
+        'https://www.googleapis.com/auth/userinfo.email',
+        'https://www.googleapis.com/auth/userinfo.profile'
+    ]);
+
+    $youtube = new Google\Service\YouTube($client);
+
+    $videos = [];
+    try {
+        $playlistItemsResponse = $youtube->playlistItems->listPlaylistItems('id,snippet', [
+            'playlistId' => $playlistId,
+            'maxResults' => 20,
+        ]);
+
+        foreach ($playlistItemsResponse->items as $item) {
+            $videos[] = [
+                'title' => $item->snippet->title,
+                'videoId' => $item->snippet->resourceId->videoId,
+                'thumbnail' => $item->snippet->thumbnails->medium->url,
+            ];
+        }
+    } catch (\Exception $e) {
+        error_log('YouTube API error: ' . $e->getMessage());
+    }
+
+    return $videos;
 }
 
