@@ -15,80 +15,94 @@
     <script src="/js/main.js" defer></script>
 </head>
 <body>
-    <header>
-        <nav>
-            <div class="logo">
-                <a href="/Index/"><img src="/images/moreplaylist.png" alt="More Playlist"></a>
-            </div>
-            <ul>
-                <?php if (isset($_SESSION['user_name'])): ?>
-                    <li>こんにちは、<?php echo htmlspecialchars($_SESSION['user_name']); ?>さん</li>
-                    <li><a href="/logout">Logout</a></li>
-                <?php else: ?>
-                    <li><a href="/Index/oauth" class="google-btn">
-                        <img src="/images/sign-in-with-google.png" alt="Sign in with Google">
-                    </a></li>
-                <?php endif; ?>
-            </ul>
-        </nav>
-        <hr>
-        <div class="search-form">
-            <form id="keywordForm" action="javascript:void(0);">
-                <input type="search" name="keyword" id="keyword" value="Lo-Fi">
-                <input type="submit" value="SEARCH">
-            </form>
-        </div>
-
-       <div class="playlist-form">
-           <form id="playlistForm" action="javascript:void(0);">
-            <select id="playlists" name="playlists">
-            <!-- 再生リストがここに表示されます -->
-            </select>
-            <input type="text" id="new_playlist_title" name="new_playlist_title" placeholder="New Playlist Name">
-            <select id="new_playlist_privacy" name="new_playlist_privacy">
-                <option value="public">public</option>
-               <option value="private">private</option>
-           </select>
-           <button type="button" id="add_to_new_playlist">Add to New Playlist</button>
-            <button type="button" id="add_to_existing_playlist">Add to Existing Playlist</button>
-            </form>
-       </div>
-
-        <div id="player_wrapper">
-            <div id="player_area" style="margin-left: 10px">
-                <iframe id="player" class="player" frameborder="0" allowfullscreen="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" title="Video Player" width="360" height="260"></iframe>
-            </div>
-            <div id="social_area">
-                <form name="f1" id="f1" data-ajax="false">
-                    <div id="share_feed_area">
-                        <div id="share_url">
-                            <!-- ログイン時にのみ表示 -->
-                            <?php 
-                            if (isset($_SESSION['token'])) {
-                                $token = json_decode($_SESSION['token'], true);
-                                if (isset($token['access_token'])): ?>
-                                    <input type="hidden" id="share_url_shorten" size="20" value="">
-                                    <input type="text" id="feed_share_url" name="feed_share_url" value="">
-                                    <a id="copyButton" data-ajax="false" onclick="updateClipboard(document.getElementById('feed_share_url').value)">copy</a>
-                                <?php endif; 
-                            } ?>
-                        </div>
-                    </div>
+    <div class="header"></div>
+    <input type="checkbox" class="openSidebarMenu" id="openSidebarMenu">
+    <label for="openSidebarMenu" class="sidebarIconToggle">
+        <div class="spinner diagonal part-1"></div>
+        <div class="spinner horizontal"></div>
+        <div class="spinner diagonal part-2"></div>
+    </label>
+    <div id="sidebarMenu">
+        <ul class="sidebarMenuInner">
+            <li>
+                <a href="/Index/oauth" class="google-btn">
+                    <img src="/images/sign-in-with-google.png" alt="Sign in with Google">
+                </a>
+            </li>
+            <?php if (isset($_SESSION['user_name'])): ?>
+            <li><a href="/logout">Logout</a></li>
+            <?php endif; ?>
+            <li>
+                <form id="keywordForm" action="javascript:void(0);">
+                    <input type="search" name="keyword" id="keyword" value="Lo-Fi">
+                    <input type="submit" value="SEARCH">
                 </form>
-            </div>
-            <div id="videoInfo"></div>
-        </div>
-    </header>
+            </li>
+            <li>
+                <form id="playlistForm" action="javascript:void(0);">
+                    <select id="playlists" name="playlists">
+                        <!-- 再生リストがここに表示されます -->
+                    </select>
+                    <input type="text" id="new_playlist_title" name="new_playlist_title" placeholder="New Playlist Name">
+                    <select id="new_playlist_privacy" name="new_playlist_privacy">
+                        <option value="public">public</option>
+                        <option value="private">private</option>
+                    </select>
+                    <button type="button" id="add_to_new_playlist">New</button>
+                    <button type="button" id="add_to_existing_playlist">Existing</button>
+                </form>
+            </li>
+        </ul>
+    </div>
     <main>
         <div class="container">
-            <p>Click on a video title to play it.</p>
+            <div id="player_wrapper">
+                <div id="player_area">
+                    <iframe id="player" class="player" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" title="Video Player" width="360" height="260"></iframe>
+                </div>
+                <div id="social_area">
+                    <form name="f1" id="f1" data-ajax="false">
+                        <div id="share_feed_area">
+                            <div id="share_url">
+                                <!-- ログイン時にのみ表示 -->
+                                <?php if (isset($_SESSION['token'])) {
+                                    $token = json_decode($_SESSION['token'], true);
+                                    if (isset($token['access_token'])): ?>
+                                        <input type="hidden" id="share_url_shorten" size="20" value="">
+                                        <input type="text" id="feed_share_url" name="feed_share_url" value="">
+                                        <a id="copyButton" data-ajax="false" onclick="updateClipboard(document.getElementById('feed_share_url').value)">copy</a>
+                                    <?php endif;
+                                } ?>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div id="videoInfo"></div>
+            </div>
             <div id="video-list">
                 <!-- JavaScriptによって動的に動画リストが生成されます -->
             </div>
         </div>
     </main>
     <footer>
-        <p><a href="/about.html">about</a> | <a href="/term-of-use.html">term-of-use</a> | <a href="/privacy.html">privacy</a> | <a href="https://forms.gle/JGhCCV6Jmoy9hvHW6">contact</a> </p>
+        <div class="footer-content">
+            <div class="logo">
+                <a href="/Index/"><img src="/images/moreplaylist.png" alt="More Playlist"></a>
+            </div>
+            <div class="about-links">
+                <ul>
+                    <li><a href="/about.html">About</a></li>
+                    <li><a href="/term-of-use.html">Term of Use</a></li>
+                    <li><a href="/privacy.html">Privacy</a></li>
+                    <li><a href="https://forms.gle/JGhCCV6Jmoy9hvHW6">Contact</a></li>
+                </ul>
+            </div>
+            <?php if (isset($_SESSION['user_name'])): ?>
+            <div class="user-info">
+                こんにちは、<?php echo htmlspecialchars($_SESSION['user_name']); ?>さん
+            </div>
+            <?php endif; ?>
+        </div>
         <p>&copy; 2016 More Playlist</p>
     </footer>
 </body>
