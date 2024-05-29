@@ -24,11 +24,13 @@
     </label>
     <div id="sidebarMenu">
         <ul class="sidebarMenuInner">
+            <?php if (!isset($_SESSION['user_name'])): ?>
             <li>
                 <a href="/Index/oauth" class="google-btn">
                     <img src="/images/sign-in-with-google.png" alt="Sign in with Google">
                 </a>
             </li>
+            <?php endif; ?>
             <?php if (isset($_SESSION['user_name'])): ?>
             <li><a href="/logout">Logout</a></li>
             <?php endif; ?>
@@ -39,10 +41,12 @@
                 </form>
             </li>
             <li>
+                <p>Your Playlist.</p>
                 <form id="playlistForm" action="javascript:void(0);">
                     <select id="playlists" name="playlists">
                         <!-- 再生リストがここに表示されます -->
                     </select>
+                    <p>Save video to playlist.</p>
                     <input type="text" id="new_playlist_title" name="new_playlist_title" placeholder="New Playlist Name">
                     <select id="new_playlist_privacy" name="new_playlist_privacy">
                         <option value="public">public</option>
@@ -52,14 +56,7 @@
                     <button type="button" id="add_to_existing_playlist">Existing</button>
                 </form>
             </li>
-        </ul>
-    </div>
-    <main>
-        <div class="container">
-            <div id="player_wrapper">
-                <div id="player_area">
-                    <iframe id="player" class="player" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" title="Video Player" width="360" height="260"></iframe>
-                </div>
+            <li>
                 <div id="social_area">
                     <form name="f1" id="f1" data-ajax="false">
                         <div id="share_feed_area">
@@ -70,12 +67,21 @@
                                     if (isset($token['access_token'])): ?>
                                         <input type="hidden" id="share_url_shorten" size="20" value="">
                                         <input type="text" id="feed_share_url" name="feed_share_url" value="">
-                                        <a id="copyButton" data-ajax="false" onclick="updateClipboard(document.getElementById('feed_share_url').value)">copy</a>
+                                        <button id="copyButton" data-ajax="false" onclick="updateClipboard(document.getElementById('feed_share_url').value)">Copy</button>
                                     <?php endif;
                                 } ?>
                             </div>
                         </div>
                     </form>
+                </div>
+            </li>
+        </ul>
+    </div>
+    <main>
+        <div class="container">
+            <div id="player_wrapper">
+                <div id="player_area">
+                    <iframe id="player" class="player" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" title="Video Player" width="360" height="260"></iframe>
                 </div>
                 <div id="videoInfo"></div>
             </div>
