@@ -9,7 +9,9 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Routing\RouteCollectorProxy;
 use Google\Client;
 use Google\Service\Oauth2;
+use Slim\Exception\HttpNotFoundException;
 
+// APIルートの設定
 $app->group('/api', function (RouteCollectorProxy $group) {
     error_log('Adding routes to group');
     $group->map(['GET', 'POST'], '/videos', 'App\Controller\VideoController:getVideos');
@@ -139,15 +141,38 @@ $app->get('/Index/share', function (Request $request, Response $response, $args)
     return $view->render($response, 'share.phtml', ['feed_url' => $feedUrl]);
 });
 
-function getPlaylistIdFromUrl($url)
-{
+// カスタム404エラーハンドラーの追加
+$app->addRoutingMiddleware();
+$errorMiddleware = $app->addErrorMiddleware(true, true, true);
+
+$customErrorHandler = function (
+    Request $request,
+    Throwable $exception,
+    bool $displayErrorDetails,
+    bool $logErrors,
+    bool $logErrorDetails
+) use ($app) {
+    $response = $app->getResponseFactory()->createResponse();
+    if ($exception instanceof HttpNotFoundException) {
+        return $app->get('view')->render($response->withStatus(404), '404.phtml');
+    }
+    return $response;
+};
+
+$errorMiddleware->setDefaultErrorHandler($customErrorHandler);
+
+// 404エラーハンドラーを設定するためのルート
+$app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], '/{routes:.+}', function (Request $request, Response $response) {
+    throw new HttpNotFoundException($request);
+});
+
+// YouTube APIを使用して再生リストの動画を取得する関数
+function getPlaylistIdFromUrl($url) {
     parse_str(parse_url($url, PHP_URL_QUERY), $queryParams);
     return $queryParams['list'] ?? null;
 }
 
-function getVideosFromPlaylist($playlistId)
-{
-    // YouTube APIを使って再生リストの動画を取得する処理を実装します
+function getVideosFromPlaylist($playlistId) {
     $client = new Google\Client();
     $client->setAuthConfig('/var/www/moreplaylistdev/client_secret.json'); // 適切なパスに変更
     $client->setDeveloperKey($_SERVER['GOOGLE_DEVELOPER_KEY']);
