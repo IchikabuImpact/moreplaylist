@@ -36,7 +36,6 @@ $app->get('/', function (Request $request, Response $response, $args) {
 
     if ($feedUrl) {
         // 再生リストの動画を取得する処理を追加
-        // ここにYouTube APIを使って再生リストの動画を取得するコードを追加します。
         $playlistId = getPlaylistIdFromUrl($feedUrl);
         $videos = getVideosFromPlaylist($playlistId);
 
