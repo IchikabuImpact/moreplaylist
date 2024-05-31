@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="google-signin-client_id" content="30540061275-rfdalsji88qhk94ud6k4m9fj86nv12h2.apps.googleusercontent.com">
@@ -32,21 +32,22 @@
             </li>
             <?php endif; ?>
             <?php if (isset($_SESSION['user_name'])): ?>
-            <li><a href="/logout">Logout</a></li>
+<li><button onclick="location.href='/logout'">Logout</button></li>
             <?php endif; ?>
             <li>
+                <p>Search by keyword:</p>
                 <form id="keywordForm" action="javascript:void(0);">
                     <input type="search" name="keyword" id="keyword" value="Lo-Fi">
                     <input type="submit" value="SEARCH">
                 </form>
             </li>
             <li>
-                <p>Your Playlist.</p>
+                <p>Your Playlists:</p>
                 <form id="playlistForm" action="javascript:void(0);">
                     <select id="playlists" name="playlists">
-                        <!-- 再生リストがここに表示されます -->
+                        <!-- playlist here -->
                     </select>
-                    <p>Save video to playlist.</p>
+                    <p>Save Video to Playlist:</p>
                     <input type="text" id="new_playlist_title" name="new_playlist_title" placeholder="New Playlist Name">
                     <select id="new_playlist_privacy" name="new_playlist_privacy">
                         <option value="public">public</option>
@@ -65,6 +66,7 @@
                                 <?php if (isset($_SESSION['token'])) {
                                     $token = json_decode($_SESSION['token'], true);
                                     if (isset($token['access_token'])): ?>
+                                        <p>Share  Playlist by URL:</p>
                                         <input type="hidden" id="share_url_shorten" size="20" value="">
                                         <input type="text" id="feed_share_url" name="feed_share_url" value="">
                                         <button id="copyButton" data-ajax="false" onclick="updateClipboard(document.getElementById('feed_share_url').value)">Copy</button>
