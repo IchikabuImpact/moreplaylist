@@ -6,10 +6,42 @@ if (session_status() == PHP_SESSION_NONE) {
 
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Routing\RouteCollectorProxy;
 use Google\Client;
 use Google\Service\Oauth2;
 use Slim\Exception\HttpNotFoundException;
+
+// 許可されたURIのリスト
+$allowedUris = [
+    '/',
+    '/Index',
+    '/logout',
+    '/Index/oauth',
+    '/Index/share',
+    '/csrf-token',
+    '/api/videos',
+    '/api/playlists',
+    '/api/playlist-videos',
+    '/api/check-login',
+    '/api/generate-share-url',
+    '/api/add-playlist',
+    '/api/add-to-existing-playlist',
+];
+
+// URIが許可されているかをチェックするミドルウェア
+$uriCheckMiddleware = function (Request $request, RequestHandlerInterface $handler) use ($allowedUris, $app) {
+    $uri = $request->getUri()->getPath();
+    if (!in_array($uri, $allowedUris)) {
+        $response = new \Slim\Psr7\Response();
+        $view = $app->getContainer()->get('view');
+        return $view->render($response->withStatus(404), '404.phtml');
+    }
+    return $handler->handle($request);
+};
+
+// ミドルウェアを追加
+$app->add($uriCheckMiddleware);
 
 // APIルートの設定
 $app->group('/api', function (RouteCollectorProxy $group) {
@@ -140,28 +172,6 @@ $app->get('/Index/share', function (Request $request, Response $response, $args)
     $feedUrl = $request->getQueryParams()['feed_url'] ?? null;
     return $view->render($response, 'share.phtml', ['feed_url' => $feedUrl]);
 });
-
-// カスタム404エラーハンドラーの追加
-//$app->addRoutingMiddleware();
-//$errorMiddleware = $app->addErrorMiddleware(true, true, true);
-//$customErrorHandler = function (
-//    Request $request,
-//    Throwable $exception,
-//    bool $displayErrorDetails,
-//    bool $logErrors,
-//    bool $logErrorDetails
-//) use ($app) {
-//    $response = $app->getResponseFactory()->createResponse();
-//    if ($exception instanceof HttpNotFoundException) {
-//        return $app->get('view')->render($response->withStatus(404), '404.phtml');
-//    }
-//    return $response;
-//};
-//$errorMiddleware->setDefaultErrorHandler($customErrorHandler);
-// 404エラーハンドラーを設定するためのルート
-//$app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], '/{routes:.+}', function (Request $request, Response $response) {
-//    throw new HttpNotFoundException($request);
-//});
 
 // YouTube APIを使用して再生リストの動画を取得する関数
 function getPlaylistIdFromUrl($url) {
