@@ -142,29 +142,26 @@ $app->get('/Index/share', function (Request $request, Response $response, $args)
 });
 
 // カスタム404エラーハンドラーの追加
-$app->addRoutingMiddleware();
-$errorMiddleware = $app->addErrorMiddleware(true, true, true);
-
-$customErrorHandler = function (
-    Request $request,
-    Throwable $exception,
-    bool $displayErrorDetails,
-    bool $logErrors,
-    bool $logErrorDetails
-) use ($app) {
-    $response = $app->getResponseFactory()->createResponse();
-    if ($exception instanceof HttpNotFoundException) {
-        return $app->get('view')->render($response->withStatus(404), '404.phtml');
-    }
-    return $response;
-};
-
-$errorMiddleware->setDefaultErrorHandler($customErrorHandler);
-
+//$app->addRoutingMiddleware();
+//$errorMiddleware = $app->addErrorMiddleware(true, true, true);
+//$customErrorHandler = function (
+//    Request $request,
+//    Throwable $exception,
+//    bool $displayErrorDetails,
+//    bool $logErrors,
+//    bool $logErrorDetails
+//) use ($app) {
+//    $response = $app->getResponseFactory()->createResponse();
+//    if ($exception instanceof HttpNotFoundException) {
+//        return $app->get('view')->render($response->withStatus(404), '404.phtml');
+//    }
+//    return $response;
+//};
+//$errorMiddleware->setDefaultErrorHandler($customErrorHandler);
 // 404エラーハンドラーを設定するためのルート
-$app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], '/{routes:.+}', function (Request $request, Response $response) {
-    throw new HttpNotFoundException($request);
-});
+//$app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], '/{routes:.+}', function (Request $request, Response $response) {
+//    throw new HttpNotFoundException($request);
+//});
 
 // YouTube APIを使用して再生リストの動画を取得する関数
 function getPlaylistIdFromUrl($url) {
