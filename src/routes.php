@@ -1,9 +1,5 @@
 <?php
 
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface;
@@ -11,6 +7,10 @@ use Slim\Routing\RouteCollectorProxy;
 use Google\Client;
 use Google\Service\Oauth2;
 use Slim\Exception\HttpNotFoundException;
+use App\Utils\SessionManager;
+
+// セッション管理のインスタンス化
+$session = new SessionManager();
 
 // 許可されたURIのリスト
 $allowedUris = [
@@ -50,26 +50,25 @@ $app->group('/api', function (RouteCollectorProxy $group) {
     $group->get('/playlists', 'App\Controller\VideoController:getPlaylists');
     $group->get('/playlist-videos', 'App\Controller\VideoController:getPlaylistVideos');
     $group->get('/check-login', 'App\Controller\VideoController:checkLogin');
-    $group->get('/generate-share-url', 'App\Controller\VideoController:generateShareUrl'); // 共有URL生成のルートを追加
+    $group->get('/generate-share-url', 'App\Controller\VideoController:generateShareUrl');
     $group->post('/add-playlist', 'App\Controller\VideoController:addPlaylist');
     $group->post('/add-to-existing-playlist', 'App\Controller\VideoController:addToExistingPlaylist');
 });
 
-$app->get('/csrf-token', function (Request $request, Response $response, $args) {
+$app->get('/csrf-token', function (Request $request, Response $response, $args) use ($session) {
     $csrfToken = bin2hex(random_bytes(32));
-    $_SESSION['csrf_token'] = $csrfToken;
+    $session->set('csrf_token', $csrfToken);
     $data = ['csrf_token' => $csrfToken];
     $response->getBody()->write(json_encode($data));
     return $response->withHeader('Content-Type', 'application/json');
 });
 
-$app->get('/', function (Request $request, Response $response, $args) {
+$app->get('/', function (Request $request, Response $response, $args) use ($session) {
     $view = $this->get('view');
     $feedUrl = $request->getQueryParams()['feed_url'] ?? null;
-    $userName = isset($_SESSION['user_name']) ? $_SESSION['user_name'] : null;
+    $userName = $session->get('user_name');
 
     if ($feedUrl) {
-        // 再生リストの動画を取得する処理を追加
         $playlistId = getPlaylistIdFromUrl($feedUrl);
         $videos = getVideosFromPlaylist($playlistId);
 
@@ -83,13 +82,12 @@ $app->get('/', function (Request $request, Response $response, $args) {
     }
 });
 
-$app->get('/Index', function (Request $request, Response $response, $args) {
+$app->get('/Index', function (Request $request, Response $response, $args) use ($session) {
     $view = $this->get('view');
     $feedUrl = $request->getQueryParams()['feed_url'] ?? null;
-    $userName = isset($_SESSION['user_name']) ? $_SESSION['user_name'] : null;
+    $userName = $session->get('user_name');
 
     if ($feedUrl) {
-        // 再生リストの動画を取得する処理を追加
         $playlistId = getPlaylistIdFromUrl($feedUrl);
         $videos = getVideosFromPlaylist($playlistId);
 
@@ -99,27 +97,26 @@ $app->get('/Index', function (Request $request, Response $response, $args) {
             'user_name' => $userName
         ]);
     } else {
-        if (!isset($_SESSION['token'])) {
+        if (!$session->get('token')) {
             return $view->render($response, 'index.phtml', ['auth_url' => '/Index/oauth', 'videos' => [], 'user_name' => $userName]);
         } else {
-            // 動画一覧表示の処理はここで行う
             return $view->render($response, 'index.phtml', ['auth_url' => '', 'videos' => [], 'user_name' => $userName]);
         }
     }
 });
 
-$app->get('/logout', function (Request $request, Response $response, $args) {
-    session_destroy();
+$app->get('/logout', function (Request $request, Response $response, $args) use ($session) {
+    $session->destroy();
     $view = $this->get('view');
     return $view->render($response, 'logout.phtml');
 });
 
-$app->get('/Index/oauth', function (Request $request, Response $response, $args) use ($app) {
+$app->get('/Index/oauth', function (Request $request, Response $response, $args) use ($app, $session) {
     $client = $app->getContainer()->get('googleClient');
     error_log('OAuth process started.');
 
     if (isset($_GET['logout'])) {
-        unset($_SESSION['token']);
+        $session->delete('token');
         error_log('User logged out.');
         return $response->withHeader('Location', '/logout')->withStatus(302);
     }
@@ -128,15 +125,14 @@ $app->get('/Index/oauth', function (Request $request, Response $response, $args)
         try {
             error_log('Authorization code received: ' . $_GET['code']);
             $client->authenticate($_GET['code']);
-            $_SESSION['token'] = json_encode($client->getAccessToken());
-            error_log('Access token obtained: ' . json_encode($_SESSION['token']));
+            $session->set('token', json_encode($client->getAccessToken()));
+            error_log('Access token obtained: ' . json_encode($session->get('token')));
 
-            // ユーザー情報を取得する
-            $client->setAccessToken(json_decode($_SESSION['token'], true));
+            $client->setAccessToken(json_decode($session->get('token'), true));
             $oauth2 = new Google\Service\Oauth2($client);
             $userInfo = $oauth2->userinfo->get();
-            $_SESSION['user_name'] = $userInfo->name;
-            error_log('User name obtained: ' . $_SESSION['user_name']);
+            $session->set('user_name', $userInfo->name);
+            error_log('User name obtained: ' . $session->get('user_name'));
 
             return $response->withHeader('Location', '/Index')->withStatus(302);
         } catch (Exception $e) {
@@ -145,8 +141,8 @@ $app->get('/Index/oauth', function (Request $request, Response $response, $args)
         }
     }
 
-    if (isset($_SESSION['token'])) {
-        $client->setAccessToken(json_decode($_SESSION['token'], true));
+    if ($session->get('token')) {
+        $client->setAccessToken(json_decode($session->get('token'), true));
         error_log('Access token set from session.');
     }
 
@@ -157,8 +153,7 @@ $app->get('/Index/oauth', function (Request $request, Response $response, $args)
     }
 
     if ($client->getAccessToken()) {
-        $_SESSION['sessionToken'] = json_encode($client->getAccessToken());
-        $google_token = json_decode($_SESSION['sessionToken'], true);
+        $session->set('sessionToken', json_encode($client->getAccessToken()));
         error_log('User authenticated successfully.');
         return $response->withHeader('Location', '/Index')->withStatus(302);
     } else {
@@ -181,7 +176,7 @@ function getPlaylistIdFromUrl($url) {
 
 function getVideosFromPlaylist($playlistId) {
     $client = new Google\Client();
-    $client->setAuthConfig('/var/www/moreplaylistdev/client_secret.json'); // 適切なパスに変更
+    $client->setAuthConfig('/var/www/moreplaylistdev/client_secret.json');
     $client->setDeveloperKey($_SERVER['GOOGLE_DEVELOPER_KEY']);
     $client->setScopes([
         'https://www.googleapis.com/auth/youtube',
