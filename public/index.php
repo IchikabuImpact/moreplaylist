@@ -1,4 +1,10 @@
 <?php
+// エラーレポートをすべて表示する
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+ini_set('session.cookie_samesite', 'None');
+ini_set('session.cookie_secure', '1');
+
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
@@ -13,9 +19,6 @@ use Slim\Middleware\ErrorMiddleware;
 use Slim\Views\PhpRenderer;
 use Google\Client;
 
-// エラーレポートをすべて表示する
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 // ログをファイルに出力する設定

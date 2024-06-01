@@ -1,3 +1,7 @@
+<?php
+header("Content-Security-Policy: script-src 'self' https://apis.google.com https://code.jquery.com; frame-src 'self' https://www.youtube.com https://accounts.google.com; style-src 'self' 'unsafe-inline'");
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,7 +17,8 @@
     <link rel="stylesheet" href="/fonts/PlayfairDisplay-VariableFont_wght.ttf">
     <script src="/js/jquery-3.6.0.min.js"></script>
     <script src="/js/cookieconsent.min.js"></script>
-    <script src="/js/main.js" defer></script>
+    <script type="module" src="/js/VideoApp.js" ></script>
+    <script type="module" src="/js/Main.js" ></script>
 </head>
 <body>
     <div class="header"></div>
@@ -33,7 +38,7 @@
             </li>
             <?php endif; ?>
             <?php if (isset($_SESSION['user_name'])): ?>
-                <li><a href="#" id="logoutLink" class="logout-link" onclick="location.href='/logout'; return false;">Logout</a></li>
+                <li><a href="#" id="logoutLink" class="logout-link">Logout</a></li>
             <?php endif; ?>
             <li>
                 <p>Search by keyword:</p>

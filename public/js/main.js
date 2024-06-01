@@ -1,7 +1,28 @@
+{document.addEventListener('DOMContentLoaded', (event) => {
+    // ログアウトリンクのイベントリスナーを追加
+    document.getElementById('logoutLink').addEventListener('click', function(event) {
+        event.preventDefault();
+        window.location.href = '/logout';
+    });
+
+    // コピーボタンのクリックイベントハンドラ
+    document.getElementById('copyButton').addEventListener('click', function(event) {
+        event.preventDefault(); // フォームの送信を防ぐ
+
+        // クリップボードにテキストをコピーする
+        const copyText = document.getElementById('feed_share_url').value;
+        navigator.clipboard.writeText(copyText).then(() => {
+            alert('URLがクリップボードにコピーされました: ' + copyText);
+        }).catch(err => {
+            console.error('クリップボードにコピーできませんでした: ', err);
+        });
+    });
+});
+
 var ytVideoApp = {
     feeds_from_keyword: function(keyword) {
         console.log('feeds_from_keyword called with keyword:', keyword);
-        $('#videoInfo').removeData('current-video-id');  // キーワード検索時に現在の動画IDをリセット
+        $('#videoInfo').removeData('current-video-id');
         $.ajax({
             url: '/api/videos',
             method: 'GET',
@@ -57,7 +78,7 @@ var ytVideoApp = {
             event.preventDefault();
             var videoId = $(this).data('video-id');
             console.log('Video link clicked, videoId:', videoId);
-            $('#videoInfo').data('current-video-id', videoId);  // 動画IDを設定
+            $('#videoInfo').data('current-video-id', videoId);
             ytVideoApp.playVideo(videoId);
         });
     },
@@ -76,7 +97,6 @@ var ytVideoApp = {
                 var $select = $('#playlists');
                 $select.empty();
                 data.forEach(function(playlist) {
-                    // 非公開プレイリストも表示する
                     $select.append($('<option></option>')
                         .attr('value', playlist.playlistId)
                         .text(playlist.title + (playlist.status === 'private' ? ' (非公開)' : '')));
@@ -86,7 +106,7 @@ var ytVideoApp = {
 
             } catch (e) {
                 console.error('Error:', e);
-                $('#playlists').after('<p class="error">プレイリストを取得できませんでした。ログインしてください。</p>');
+                $('#playlists').after('<p class="error">please login</p>');
             }
         });
     }
@@ -124,7 +144,6 @@ $(document).ready(function() {
     });
     ytVideoApp.feeds_from_keyword('Lo-Fi');
 
-    // ユーザーがログインしているかどうかをチェックするAPIを呼び出す
     $.get('/api/check-login', function(data) {
         console.log('check-login API called, data received:', data);
         if (data.loggedIn) {
@@ -182,7 +201,6 @@ $(document).ready(function() {
                         }
                     });
 
-                    // 共有URLを生成するAPIを呼び出す
                     $.ajax({
                         url: '/api/generate-share-url',
                         method: 'GET',
@@ -213,7 +231,6 @@ $(document).ready(function() {
             });
         } else {
             console.log('User is not logged in, hiding playlists');
-            // 非ログイン時はプレイリストを非表示にする
             $('#playlists-container').hide();
         }
     });
@@ -222,13 +239,12 @@ $(document).ready(function() {
         e.preventDefault();
         const videoId = $(this).data('video-id');
         console.log('Video link clicked, videoId:', videoId);
-        $('#videoInfo').data('current-video-id', videoId);  // 動画IDを設定
+        $('#videoInfo').data('current-video-id', videoId);
         ytVideoApp.playVideo(videoId);
     });
 
-    // 新しい再生リストを作成し、動画を追加する
     $('#add_to_new_playlist').on('click', function() {
-        var videoId = $('#videoInfo').data('current-video-id');  // 動画IDを取得
+        var videoId = $('#videoInfo').data('current-video-id');
         var playlistTitle = $('#new_playlist_title').val().trim();
         var privacyStatus = $('#new_playlist_privacy').val();
 
@@ -255,10 +271,8 @@ $(document).ready(function() {
                 if (data.success) {
                     alert(data.success);
                     ytVideoApp.updatePlaylistsDropdown();  // プレイリストのドロップダウンを更新
-                } else if (data.error) {
-                    alert('Error: ' + data.error);
                 } else {
-                    alert('Unknown error occurred');
+                    alert('Error: ' + data.error);
                 }
             },
             error: function(xhr, status, error) {
@@ -268,7 +282,7 @@ $(document).ready(function() {
     });
 
     $('#add_to_existing_playlist').on('click', function() {
-        var videoId = $('#videoInfo').data('current-video-id');  // 動画IDを取得
+        var videoId = $('#videoInfo').data('current-video-id');
         var playlistId = $('#playlists').val();
 
         console.log('Add to existing playlist clicked, videoId:', videoId, 'playlistId:', playlistId);
@@ -302,12 +316,10 @@ $(document).ready(function() {
         });
     });
 
-    // キーワード検索時に現在の動画IDをリセット
     $('#keyword').on('input', function() {
         $('#videoInfo').removeData('current-video-id');
     });
 
-    // シャッフル再生機能の追加
     $('#shuffleButton').on('click', function() {
         const videoIds = Array.from(document.querySelectorAll('#video-list a[data-video-id]')).map(a => a.getAttribute('data-video-id'));
         shuffleArray(videoIds);
@@ -335,18 +347,5 @@ $(document).ready(function() {
 
         playNextVideo();
     }
-
-    // ログアウトリンクのイベントリスナーを追加
-    document.getElementById('logoutLink').addEventListener('click', function(event) {
-        event.preventDefault();
-        alert("logoutLink");
-        window.location.href = '/logout';
-    });
-});
-
-document.addEventListener('DOMContentLoaded', (event) => {
-    document.getElementById('logoutLink').addEventListener('click', function() {
-        window.location.href = '/logout';
-    });
 });
 

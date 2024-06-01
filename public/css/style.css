@@ -13,7 +13,6 @@ body {
     max-width: 100%;
     box-shadow: none;
     background-color: #FC466B;
-    #position: fixed;
     height: 60px;
     overflow: hidden;
     z-index: 10;
@@ -37,13 +36,6 @@ body {
     margin: 10 auto;
     padding: 10px; /* プレイヤー周りに余白を追加 */
     text-align: center;
-    #background-color: #fff; /* プレイヤー背景を白に設定 */
-    #box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    #border-radius: 8px;
-    #max-width: 800px; /* プレイヤーの最大幅を設定 */
-    #box-sizing: border-box;
-    /* 右側の余白を詰める */
-    #width: calc(100%);
 }
 
 #video-list {
@@ -217,7 +209,7 @@ footer {
 }
 
 .logout-link {
-    color: #fff !important; /* 目立つ赤色 */
+    color: #fff !important; /* 目立つ白色 */
     font-weight: bold;
     text-decoration: none !important; /* 下線を無効化 */
     padding: 5px 10px; /* 余白を追加 */
