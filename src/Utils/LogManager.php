@@ -2,7 +2,7 @@
 namespace App\Utils;
 
 use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
+use Monolog\Handler\ErrorLogHandler;
 
 class LogManager
 {
@@ -11,7 +11,7 @@ class LogManager
     public function __construct($name = 'app')
     {
         $this->logger = new Logger($name);
-        $this->logger->pushHandler(new StreamHandler(__DIR__ . '/../../logs/app.log', Logger::DEBUG));
+        $this->logger->pushHandler(new ErrorLogHandler(ErrorLogHandler::OPERATING_SYSTEM, Logger::DEBUG));
     }
 
     public function getLogger()
