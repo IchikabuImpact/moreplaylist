@@ -4,6 +4,7 @@ namespace App\Controller;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use App\Utils\SessionManager;
+use App\Utils\LogManager;
 use Google\Client;
 use Google\Service\YouTube;
 
@@ -11,10 +12,10 @@ class VideoController
 {
     private $client;
     private $session;
+    private $logger;
 
-    public function __construct(SessionManager $session)
+    public function __construct(SessionManager $session, LogManager $logManager)
     {
-        error_log('VideoController::__construct called');
         $this->session = $session;
         $this->client = new Client();
         $this->client->setAuthConfig(__DIR__ . '/../../client_secret.json');
@@ -27,36 +28,46 @@ class VideoController
         ]);
         $this->client->setRedirectUri('https://' . $_SERVER['HTTP_HOST'] . '/Index/oauth');
         $this->client->setAccessType('offline');
+        $this->logger = $logManager->getLogger();
     }
 
-    public function getVideos(Request $request, Response $response, $args)
+    private function authenticateClient()
     {
-        error_log('VideoController::getVideos called');
-        $params = (array)$request->getQueryParams();
-        $keyword = $params['keyword'] ?? 'Lo-Fi';
-
         $token = $this->session->get('token');
         if ($token) {
             $token = json_decode($token, true);
             if (isset($token['access_token'])) {
-                error_log('Access token exists in session.');
+                $this->logger->debug('Access token exists in session.');
                 $this->client->setAccessToken($token);
 
                 if ($this->client->isAccessTokenExpired()) {
-                    error_log('Access token expired.');
+                    $this->logger->debug('Access token expired.');
                     $refreshToken = $this->client->getRefreshToken();
                     if (!$refreshToken) {
-                        return $response->withHeader('Location', '/logout')->withStatus(302);
+                        return false;
                     }
-                    $this->client->fetchAccessTokenWithRefreshToken($refreshToken);
-                    $this->session->set('token', json_encode($this->client->getAccessToken()));
-                    error_log('New access token obtained: ' . print_r($this->session->get('token'), true));
+                    $newToken = $this->client->fetchAccessTokenWithRefreshToken($refreshToken);
+                    $this->session->set('token', json_encode($newToken));
+                    $this->logger->debug('New access token obtained.', ['token' => $newToken]);
                 }
+                return true;
             } else {
-                error_log('Access token does not exist in session token.');
+                $this->logger->warning('Access token does not exist in session token.');
             }
         } else {
-            error_log('Session token does not exist.');
+            $this->logger->warning('Session token does not exist.');
+        }
+        return false;
+    }
+
+    public function getVideos(Request $request, Response $response, $args)
+    {
+        $this->logger->info('VideoController::getVideos called');
+        $params = (array)$request->getQueryParams();
+        $keyword = $params['keyword'] ?? 'Lo-Fi';
+
+        if (!$this->authenticateClient()) {
+            return $response->withHeader('Location', '/logout')->withStatus(302);
         }
 
         $youtube = new YouTube($this->client);
@@ -78,7 +89,7 @@ class VideoController
 
             $json = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
             if (json_last_error() !== JSON_ERROR_NONE) {
-                error_log('JSON encode error: ' . json_last_error_msg());
+                $this->logger->error('JSON encode error: ' . json_last_error_msg());
                 $response->getBody()->write(json_encode(['error' => 'Internal server error.']));
                 return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
             }
@@ -86,7 +97,7 @@ class VideoController
             $response->getBody()->write($json);
             return $response->withHeader('Content-Type', 'application/json');
         } catch (\Exception $e) {
-            error_log('YouTube API error: ' . $e->getMessage());
+            $this->logger->error('YouTube API error: ' . $e->getMessage());
             $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
             return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
@@ -95,20 +106,13 @@ class VideoController
     public function checkLogin(Request $request, Response $response, $args)
     {
         // セッション内容をエラーログに出力
-        error_log('Session contents: ' . print_r($this->session->get('token'), true));
+        $this->logger->debug('Session contents: ' . print_r($this->session->get('token'), true));
 
         // ログイン状態のチェック
-        $loggedIn = false;
-        $token = $this->session->get('token');
-        if ($token) {
-            $token = json_decode($token, true);
-            if (isset($token['access_token'])) {
-                $loggedIn = true;
-            }
-        }
+        $loggedIn = $this->authenticateClient();
 
         // ログを追加
-        error_log('checkLogin called, loggedIn: ' . ($loggedIn ? 'true' : 'false'));
+        $this->logger->info('checkLogin called, loggedIn: ' . ($loggedIn ? 'true' : 'false'));
 
         // レスポンスの作成
         $response->getBody()->write(json_encode(['loggedIn' => $loggedIn]));
@@ -119,24 +123,8 @@ class VideoController
 
     public function getPlaylists(Request $request, Response $response, $args)
     {
-        $token = $this->session->get('token');
-        if (!$token) {
-            // 認証がない場合のエラーレスポンス
-            $response->getBody()->write(json_encode(['error' => 'Unauthorized access. Please log in.']));
-            return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
-        }
-
-        $token = json_decode($token, true);
-        $this->client->setAccessToken($token);
-
-        if ($this->client->isAccessTokenExpired()) {
-            $refreshToken = $this->client->getRefreshToken();
-            if (!$refreshToken) {
-                return $response->withHeader('Location', '/logout')->withStatus(302);
-            }
-            $newToken = $this->client->fetchAccessTokenWithRefreshToken($refreshToken);
-            $this->session->set('token', json_encode($newToken));
-            $this->client->setAccessToken($newToken);
+        if (!$this->authenticateClient()) {
+            return $response->withHeader('Location', '/logout')->withStatus(302);
         }
 
         $youtube = new YouTube($this->client);
@@ -156,11 +144,11 @@ class VideoController
                 ];
             }
 
-            error_log('Playlists fetched: ' . json_encode($data));
+            $this->logger->info('Playlists fetched: ' . json_encode($data));
 
             $json = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
             if (json_last_error() !== JSON_ERROR_NONE) {
-                error_log('JSON encode error: ' . json_last_error_msg());
+                $this->logger->error('JSON encode error: ' . json_last_error_msg());
                 $response->getBody()->write(json_encode(['error' => 'Internal server error.']));
                 return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
             }
@@ -168,7 +156,7 @@ class VideoController
             $response->getBody()->write($json);
             return $response->withHeader('Content-Type', 'application/json');
         } catch (\Exception $e) {
-            error_log('YouTube API error: ' . $e->getMessage());
+            $this->logger->error('YouTube API error: ' . $e->getMessage());
             $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
             return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
@@ -176,28 +164,11 @@ class VideoController
 
     public function getPlaylistVideos(Request $request, Response $response, $args)
     {
-        $playlistId = $request->getQueryParams()['playlistId'];
-
-        $token = $this->session->get('token');
-        if ($token) {
-            $token = json_decode($token, true);
-            if (isset($token['access_token'])) {
-                $this->client->setAccessToken($token);
-
-                if ($this->client->isAccessTokenExpired()) {
-                    $refreshToken = $this->client->getRefreshToken();
-                    if (!$refreshToken) {
-                        return $response->withHeader('Location', '/logout')->withStatus(302);
-                    }
-                    $this->client->fetchAccessTokenWithRefreshToken($refreshToken);
-                    $this->session->set('token', json_encode($this->client->getAccessToken()));
-                }
-            }
-        } else {
-            // セッションがない場合はログインしていないのでエラーレスポンスを返す
+        if (!$this->authenticateClient()) {
             return $response->withHeader('Location', '/logout')->withStatus(302);
         }
 
+        $playlistId = $request->getQueryParams()['playlistId'];
         $youtube = new YouTube($this->client);
 
         try {
@@ -215,11 +186,11 @@ class VideoController
                 ];
             }
 
-            error_log('Playlist videos fetched: ' . json_encode($data));
+            $this->logger->info('Playlist videos fetched: ' . json_encode($data));
 
             $json = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
             if (json_last_error() !== JSON_ERROR_NONE) {
-                error_log('JSON encode error: ' . json_last_error_msg());
+                $this->logger->error('JSON encode error: ' . json_last_error_msg());
                 $response->getBody()->write(json_encode(['error' => 'Internal server error.']));
                 return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
             }
@@ -227,7 +198,7 @@ class VideoController
             $response->getBody()->write($json);
             return $response->withHeader('Content-Type', 'application/json');
         } catch (\Exception $e) {
-            error_log('YouTube API error: ' . $e->getMessage());
+            $this->logger->error('YouTube API error: ' . $e->getMessage());
             $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
             return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
@@ -239,11 +210,11 @@ class VideoController
         $privacyStatus = $request->getQueryParams()['privacyStatus'] ?? 'public';
         $serverName = $_SERVER['SERVER_NAME'];
 
-        error_log("generateShareUrl called with playlistId: $playlistId");
+        $this->logger->info("generateShareUrl called with playlistId: $playlistId");
 
         if ($playlistId) {
             $longUrl = "https://www.youtube.com/playlist?list=$playlistId";
-            error_log("Long URL: $longUrl");
+            $this->logger->debug("Long URL: $longUrl");
             $shareUrl = "https://$serverName/Index?feed_url=" . urlencode($longUrl);
         } else {
             $shareUrl = '';
@@ -265,23 +236,8 @@ class VideoController
             return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
         }
 
-        $token = $this->session->get('token');
-        if (!$token) {
-            $response->getBody()->write(json_encode(['error' => 'Unauthorized access. Please log in.']));
-            return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
-        }
-
-        $token = json_decode($token, true);
-        $this->client->setAccessToken($token);
-
-        if ($this->client->isAccessTokenExpired()) {
-            $refreshToken = $this->client->getRefreshToken();
-            if (!$refreshToken) {
-                return $response->withHeader('Location', '/logout')->withStatus(302);
-            }
-            $newToken = $this->client->fetchAccessTokenWithRefreshToken($refreshToken);
-            $this->session->set('token', json_encode($newToken));
-            $this->client->setAccessToken($newToken);
+        if (!$this->authenticateClient()) {
+            return $response->withHeader('Location', '/logout')->withStatus(302);
         }
 
         $youtube = new YouTube($this->client);
@@ -318,7 +274,7 @@ class VideoController
             $response->getBody()->write(json_encode(['success' => 'Video added to new playlist successfully.']));
             return $response->withHeader('Content-Type', 'application/json');
         } catch (\Exception $e) {
-            error_log('YouTube API error: ' . $e->getMessage());
+            $this->logger->error('YouTube API error: ' . $e->getMessage());
             $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
             return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
@@ -335,23 +291,8 @@ class VideoController
             return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
         }
 
-        $token = $this->session->get('token');
-        if (!$token) {
-            $response->getBody()->write(json_encode(['error' => 'Unauthorized access. Please log in.']));
-            return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
-        }
-
-        $token = json_decode($token, true);
-        $this->client->setAccessToken($token);
-
-        if ($this->client->isAccessTokenExpired()) {
-            $refreshToken = $this->client->getRefreshToken();
-            if (!$refreshToken) {
-                return $response->withHeader('Location', '/logout')->withStatus(302);
-            }
-            $newToken = $this->client->fetchAccessTokenWithRefreshToken($refreshToken);
-            $this->session->set('token', json_encode($newToken));
-            $this->client->setAccessToken($newToken);
+        if (!$this->authenticateClient()) {
+            return $response->withHeader('Location', '/logout')->withStatus(302);
         }
 
         $youtube = new YouTube($this->client);
@@ -373,7 +314,7 @@ class VideoController
             $response->getBody()->write(json_encode(['success' => 'Video added to existing playlist successfully.']));
             return $response->withHeader('Content-Type', 'application/json');
         } catch (\Exception $e) {
-            error_log('YouTube API error: ' . $e->getMessage());
+            $this->logger->error('YouTube API error: ' . $e->getMessage());
             $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
             return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
