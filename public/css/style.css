@@ -216,3 +216,18 @@ footer {
     font-weight: bold;
 }
 
+.logout-link {
+    color: #fff !important; /* 目立つ赤色 */
+    font-weight: bold;
+    text-decoration: none !important; /* 下線を無効化 */
+    padding: 5px 10px; /* 余白を追加 */
+    border-radius: 5px; /* 角を丸く */
+    display: inline-block; /* インラインブロック要素に */
+}
+
+.logout-link:hover {
+    color: #ffffff !important; /* ホバー時のテキストカラー */
+    background-color: #ff0000 !important; /* ホバー時の背景色 */
+    text-decoration: none !important; /* 下線を無効化 */
+}
+

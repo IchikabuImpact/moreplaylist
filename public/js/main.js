@@ -335,5 +335,18 @@ $(document).ready(function() {
 
         playNextVideo();
     }
+
+    // ログアウトリンクのイベントリスナーを追加
+    document.getElementById('logoutLink').addEventListener('click', function(event) {
+        event.preventDefault();
+        alert("logoutLink");
+        window.location.href = '/logout';
+    });
+});
+
+document.addEventListener('DOMContentLoaded', (event) => {
+    document.getElementById('logoutLink').addEventListener('click', function() {
+        window.location.href = '/logout';
+    });
 });
 

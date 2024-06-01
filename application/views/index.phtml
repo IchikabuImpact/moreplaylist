@@ -7,9 +7,10 @@
     <meta http-equiv="Permissions-Policy" content="fullscreen=(self)">
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://apis.google.com https://code.jquery.com; frame-src 'self' https://www.youtube.com https://accounts.google.com; style-src 'self' 'unsafe-inline'">
     <title>Index</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" type="text/css" href="/css/cookieconsent.min.css">
+    <link rel="stylesheet" href="/fonts/PlayfairDisplay-Italic-VariableFont_wght.ttf">
+    <link rel="stylesheet" href="/fonts/PlayfairDisplay-VariableFont_wght.ttf">
     <script src="/js/jquery-3.6.0.min.js"></script>
     <script src="/js/cookieconsent.min.js"></script>
     <script src="/js/main.js" defer></script>
@@ -32,7 +33,7 @@
             </li>
             <?php endif; ?>
             <?php if (isset($_SESSION['user_name'])): ?>
-<li><button onclick="location.href='/logout'">Logout</button></li>
+                <li><a href="#" id="logoutLink" class="logout-link" onclick="location.href='/logout'; return false;">Logout</a></li>
             <?php endif; ?>
             <li>
                 <p>Search by keyword:</p>

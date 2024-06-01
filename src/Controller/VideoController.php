@@ -66,7 +66,7 @@ class VideoController
         $params = (array)$request->getQueryParams();
         $keyword = $params['keyword'] ?? 'Lo-Fi';
 
-        if (!$this->authenticateClient()) {
+        if ($this->session->get('token') && !$this->authenticateClient()) {
             return $response->withHeader('Location', '/logout')->withStatus(302);
         }
 
