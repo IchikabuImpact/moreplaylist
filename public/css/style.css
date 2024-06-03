@@ -47,6 +47,27 @@ body {
     max-width: 800px; /* 動画一覧の最大幅を設定 */
 }
 
+#pagination {
+    text-align: center; /* ページングリンクを中央揃え */
+    margin: 20px auto; /* 上下に余白を追加 */
+}
+
+#pagination a {
+    color: #4a4a4a;
+    text-decoration: none;
+    padding: 10px 20px;
+    margin: 0 5px;
+    background-color: #ffffff;
+    border: 1px solid #4a4a4a;
+    border-radius: 5px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+#pagination a:hover {
+    background-color: #4a4a4a;
+    color: #ffffff;
+}
+
 #sidebarMenu {
     height: 100%;
     position: fixed;

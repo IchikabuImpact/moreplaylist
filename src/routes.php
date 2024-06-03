@@ -209,9 +209,9 @@ function getPlaylistIdFromUrl($url) {
     return $queryParams['list'] ?? null;
 }
 
-function getVideosFromPlaylist($playlistId) {
+function getVideosFromPlaylist($playlistId, $pageToken = null) {
     $client = new Google\Client();
-    $client->setAuthConfig('/var/www/moreplaylistdev/client_secret.json');
+    $client->setAuthConfig('/var/www/moreplaylistdev/client_secret.json'); // 適切なパスに変更
     $client->setDeveloperKey($_SERVER['GOOGLE_DEVELOPER_KEY']);
     $client->setScopes([
         'https://www.googleapis.com/auth/youtube',
@@ -224,10 +224,16 @@ function getVideosFromPlaylist($playlistId) {
 
     $videos = [];
     try {
-        $playlistItemsResponse = $youtube->playlistItems->listPlaylistItems('id,snippet', [
+        $params = [
             'playlistId' => $playlistId,
             'maxResults' => 20,
-        ]);
+        ];
+
+        if ($pageToken) {
+            $params['pageToken'] = $pageToken;
+        }
+
+        $playlistItemsResponse = $youtube->playlistItems->listPlaylistItems('id,snippet', $params);
 
         foreach ($playlistItemsResponse->items as $item) {
             $videos[] = [
@@ -236,11 +242,14 @@ function getVideosFromPlaylist($playlistId) {
                 'thumbnail' => $item->snippet->thumbnails->medium->url,
             ];
         }
+
+        $nextPageToken = $playlistItemsResponse->nextPageToken ?? null;
+        $prevPageToken = $playlistItemsResponse->prevPageToken ?? null;
+
+        return ['videos' => $videos, 'nextPageToken' => $nextPageToken, 'prevPageToken' => $prevPageToken];
+
     } catch (\Exception $e) {
-        global $logger;
-        $logger->error('YouTube API error.', ['exception' => $e]);
+        error_log('YouTube API error: ' . $e->getMessage());
+        return ['videos' => $videos, 'nextPageToken' => null, 'prevPageToken' => null];
     }
-
-    return $videos;
 }
-

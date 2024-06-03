@@ -60,48 +60,64 @@ class VideoController
         return false;
     }
 
-    public function getVideos(Request $request, Response $response, $args)
-    {
-        $this->logger->info('VideoController::getVideos called');
-        $params = (array)$request->getQueryParams();
-        $keyword = $params['keyword'] ?? 'Lo-Fi';
+public function getVideos(Request $request, Response $response, $args)
+{
+    $this->logger->info('VideoController::getVideos called');
+    $params = (array)$request->getQueryParams();
+    $keyword = $params['keyword'] ?? 'Lo-Fi';
+    $pageToken = $params['pageToken'] ?? null;
 
-        if ($this->session->get('token') && !$this->authenticateClient()) {
-            return $response->withHeader('Location', '/logout')->withStatus(302);
+    if ($this->session->get('token') && !$this->authenticateClient()) {
+        return $response->withHeader('Location', '/logout')->withStatus(302);
+    }
+
+    $youtube = new YouTube($this->client);
+
+    try {
+        $searchParams = [
+            'q' => $keyword,
+            'maxResults' => 20,
+        ];
+
+        if ($pageToken) {
+            $searchParams['pageToken'] = $pageToken;
         }
 
-        $youtube = new YouTube($this->client);
+        $searchResponse = $youtube->search->listSearch('id,snippet', $searchParams);
 
-        try {
-            $searchResponse = $youtube->search->listSearch('id,snippet', [
-                'q' => $keyword,
-                'maxResults' => 20,
-            ]);
+        $data = [];
+        foreach ($searchResponse->items as $item) {
+            $data[] = [
+                'title' => $item->snippet->title,
+                'videoId' => $item->id->videoId,
+                'thumbnail' => $item->snippet->thumbnails->medium->url,
+            ];
+        }
 
-            $data = [];
-            foreach ($searchResponse->items as $item) {
-                $data[] = [
-                    'title' => $item->snippet->title,
-                    'videoId' => $item->id->videoId,
-                    'thumbnail' => $item->snippet->thumbnails->medium->url,
-                ];
-            }
+        $nextPageToken = $searchResponse->nextPageToken ?? null;
+        $prevPageToken = $searchResponse->prevPageToken ?? null;
 
-            $json = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                $this->logger->error('JSON encode error: ' . json_last_error_msg());
-                $response->getBody()->write(json_encode(['error' => 'Internal server error.']));
-                return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
-            }
+        $responseBody = [
+            'videos' => $data,
+            'nextPageToken' => $nextPageToken,
+            'prevPageToken' => $prevPageToken,
+        ];
 
-            $response->getBody()->write($json);
-            return $response->withHeader('Content-Type', 'application/json');
-        } catch (\Exception $e) {
-            $this->logger->error('YouTube API error: ' . $e->getMessage());
-            $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
+        $json = json_encode($responseBody, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $this->logger->error('JSON encode error: ' . json_last_error_msg());
+            $response->getBody()->write(json_encode(['error' => 'Internal server error.']));
             return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
+
+        $response->getBody()->write($json);
+        return $response->withHeader('Content-Type', 'application/json');
+    } catch (\Exception $e) {
+        $this->logger->error('YouTube API error: ' . $e->getMessage());
+        $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
+        return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
     }
+}
 
     public function checkLogin(Request $request, Response $response, $args)
     {

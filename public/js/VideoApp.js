@@ -35,13 +35,13 @@ export default class VideoApp {
         });
     }
 
-    feeds_from_keyword(keyword) {
-        console.log('feeds_from_keyword called with keyword:', keyword);
+    feeds_from_keyword(keyword, pageToken = '') {
+        console.log('feeds_from_keyword called with keyword:', keyword, 'and pageToken:', pageToken);
         $('#videoInfo').removeData('current-video-id');
         $.ajax({
             url: '/api/videos',
             method: 'GET',
-            data: { keyword: keyword },
+            data: { keyword: keyword, pageToken: pageToken },
             success: (data) => {
                 console.log('feeds_from_keyword success, data received:', data);
                 try {
@@ -49,10 +49,10 @@ export default class VideoApp {
                         data = JSON.parse(data);
                     }
 
-                    if (Array.isArray(data)) {
+                    if (Array.isArray(data.videos)) {
                         let videoListHtml = '<ul>';
                         let firstVideoId = null;
-                        data.forEach((video, index) => {
+                        data.videos.forEach((video, index) => {
                             if (index === 0) {
                                 firstVideoId = video.videoId;
                             }
@@ -68,6 +68,27 @@ export default class VideoApp {
                             this.playVideo(firstVideoId);
                         }
                         this.attachClickEvents();
+
+                        // ページングリンクの生成
+                        let paginationHtml = '';
+                        if (data.prevPageToken) {
+                            paginationHtml += `<a href="#" class="prev-page" data-page-token="${data.prevPageToken}">Previous</a>`;
+                        }
+                        if (data.prevPageToken && data.nextPageToken) {
+                            paginationHtml += ' | ';
+                        }
+                        if (data.nextPageToken) {
+                            paginationHtml += `<a href="#" class="next-page" data-page-token="${data.nextPageToken}">Next</a>`;
+                        }
+                        $('#pagination').html(paginationHtml);
+
+                        // ページングリンクのイベントリスナーを追加
+                        $('.prev-page, .next-page').on('click', (event) => {
+                            event.preventDefault();
+                            const pageToken = $(event.target).data('page-token');
+                            this.feeds_from_keyword(keyword, pageToken);
+                        });
+
                     } else {
                         throw new Error('Invalid data format');
                     }

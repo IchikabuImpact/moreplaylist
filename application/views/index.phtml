@@ -1,6 +1,5 @@
 <?php
 header("Content-Security-Policy: script-src 'self' https://apis.google.com https://code.jquery.com; frame-src 'self' https://www.youtube.com https://accounts.google.com; style-src 'self' 'unsafe-inline'");
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -17,8 +16,8 @@ header("Content-Security-Policy: script-src 'self' https://apis.google.com https
     <link rel="stylesheet" href="/fonts/PlayfairDisplay-VariableFont_wght.ttf">
     <script src="/js/jquery-3.6.0.min.js"></script>
     <script src="/js/cookieconsent.min.js"></script>
-    <script type="module" src="/js/VideoApp.js" ></script>
-    <script type="module" src="/js/Main.js" ></script>
+    <script type="module" src="/js/VideoApp.js"></script>
+    <script type="module" src="/js/Main.js"></script>
 </head>
 <body>
     <div class="header"></div>
@@ -68,11 +67,10 @@ header("Content-Security-Policy: script-src 'self' https://apis.google.com https
                     <form name="f1" id="f1" data-ajax="false">
                         <div id="share_feed_area">
                             <div id="share_url">
-                                <!-- ログイン時にのみ表示 -->
                                 <?php if (isset($_SESSION['token'])) {
                                     $token = json_decode($_SESSION['token'], true);
                                     if (isset($token['access_token'])): ?>
-                                        <p>Share  Playlist by URL:</p>
+                                        <p>Share Playlist by URL:</p>
                                         <input type="hidden" id="share_url_shorten" size="20" value="">
                                         <input type="text" id="feed_share_url" name="feed_share_url" value="">
                                         <button id="copyButton" data-ajax="false" onclick="updateClipboard(document.getElementById('feed_share_url').value)">Copy</button>
@@ -84,7 +82,7 @@ header("Content-Security-Policy: script-src 'self' https://apis.google.com https
                 </div>
             </li>
             <li>
-                <button id="shuffleButton">Shuffle Play</button> <!-- シャッフルボタン追加 -->
+                <button id="shuffleButton">Shuffle Play</button>
             </li>
         </ul>
     </div>
@@ -99,6 +97,7 @@ header("Content-Security-Policy: script-src 'self' https://apis.google.com https
             <div id="video-list">
                 <!-- JavaScriptによって動的に動画リストが生成されます -->
             </div>
+            <div id="pagination" class="pagination"></div>
         </div>
     </main>
     <footer>

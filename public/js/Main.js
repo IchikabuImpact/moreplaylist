@@ -97,9 +97,15 @@ document.addEventListener('DOMContentLoaded', (event) => {
             });
         } else {
             console.log('User is not logged in, hiding playlists');
-            // 非ログイン時はプレイリストを非表示にする
             $('#playlists-container').hide();
         }
+    });
+
+    // ページングリンクのイベントリスナーを追加
+    $(document).on('click', '.prev-page, .next-page', function (event) {
+        event.preventDefault();
+        const pageToken = $(this).data('page-token');
+        videoApp.feeds_from_keyword($('#keyword').val(), pageToken);
     });
 });
 window.onerror = function (message, source, lineno, colno, error) {
