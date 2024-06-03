@@ -34,7 +34,7 @@ Contains the source code for the application.
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/moreplaylist.git
+   git clone https://github.com/IchikabuImpact/moreplaylist.git
 
 ## License
 
