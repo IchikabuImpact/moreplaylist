@@ -107,6 +107,14 @@ document.addEventListener('DOMContentLoaded', (event) => {
         const pageToken = $(this).data('page-token');
         videoApp.feeds_from_keyword($('#keyword').val(), pageToken);
     });
+
+    // タグクリック時のイベントリスナーを追加
+    $(document).on('click', '.keyword-tag', function (event) {
+        event.preventDefault();
+        const keyword = $(this).text();
+        console.log('Keyword tag clicked, keyword:', keyword);
+        videoApp.feeds_from_keyword(keyword);
+    });
 });
 window.onerror = function (message, source, lineno, colno, error) {
     if (source.includes('youtube')) {

@@ -47,6 +47,17 @@ body {
     max-width: 800px; /* 動画一覧の最大幅を設定 */
 }
 
+#video-list ul {
+    list-style: none; /* デフォルトのリストスタイルを削除 */
+    padding-left: 0; /* 左の余白をなくす */
+}
+
+#video-list ul li {
+    position: relative;
+    padding-left: 0; /* 元の状態に戻す */
+    margin-bottom: 10px; /* 各リストアイテムの下に余白を追加 */
+}
+
 #pagination {
     text-align: center; /* ページングリンクを中央揃え */
     margin: 20px auto; /* 上下に余白を追加 */
@@ -64,6 +75,50 @@ body {
 }
 
 #pagination a:hover {
+    background-color: #4a4a4a;
+    color: #ffffff;
+}
+
+#keyword-tags {
+    background-color: rgba(255, 255, 255, 0.7); /* 動画一覧と同様の背景色 */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin: 20px auto;
+    max-width: 800px; /* タグクラウドの最大幅を設定 */
+    text-align: center;
+}
+
+#keyword-tags p {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+#keyword-tags ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+#keyword-tags ul li {
+    margin: 5px;
+}
+
+#keyword-tags ul li a {
+    text-decoration: none;
+    color: #4a4a4a;
+    background-color: #ffffff;
+    padding: 10px 15px;
+    border-radius: 5px;
+    border: 1px solid #4a4a4a;
+    transition: background-color 0.3s, color 0.3s;
+    display: inline-block;
+    font-size: 14px;
+}
+
+#keyword-tags ul li a:hover {
     background-color: #4a4a4a;
     color: #ffffff;
 }
@@ -241,6 +296,6 @@ footer {
 .logout-link:hover {
     color: #ffffff !important; /* ホバー時のテキストカラー */
     background-color: #ff0000 !important; /* ホバー時の背景色 */
-    text-decoration: none !important; /* 下線を無効化 */
+    text-decoration: none !重要; /* 下線を無効化 */
 }
 
