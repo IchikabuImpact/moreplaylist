@@ -58,7 +58,8 @@ export default class VideoApp {
                             }
                             videoListHtml += `
                                 <li>
-                                    <a href="#" data-video-id="${video.videoId}">${video.title}</a>
+                                    <img src="/images/play_button.png" alt="Play" class="play-button" data-video-id="${video.videoId}">
+                                    <span>${video.title}</span>
                                 </li>
                             `;
                         });
@@ -112,13 +113,35 @@ export default class VideoApp {
 
     attachClickEvents() {
         console.log('attachClickEvents called');
-        $('#video-list a').on('click', (event) => {
+        $('#video-list img.play-button').on('click', (event) => {
             event.preventDefault();
-            var videoId = $(event.target).data('video-id');
-            console.log('Video link clicked, videoId:', videoId);
+            const button = event.target;
+            const videoId = $(button).data('video-id');
+            console.log('Play button clicked, videoId:', videoId);
             $('#videoInfo').data('current-video-id', videoId);
             this.playVideo(videoId);
+            this.updateButtonState(button, true);
         });
+
+        $('#video-list img.pause-button').on('click', (event) => {
+            event.preventDefault();
+            const button = event.target;
+            console.log('Pause button clicked');
+            this.updateButtonState(button, false);
+            // 一時停止処理を実行（必要に応じて追加）
+        });
+    }
+
+    updateButtonState(button, isPlaying) {
+        if (isPlaying) {
+            button.src = '/images/pause_button.png';
+            button.classList.remove('play-button');
+            button.classList.add('pause-button');
+        } else {
+            button.src = '/images/play_button.png';
+            button.classList.remove('pause-button');
+            button.classList.add('play-button');
+        }
     }
 
     updatePlaylistsDropdown() {

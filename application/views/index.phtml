@@ -95,13 +95,38 @@ header("Content-Security-Policy: script-src 'self' https://apis.google.com https
                 <div id="videoInfo"></div>
             </div>
             <div id="video-list">
-                <!-- JavaScriptによって動的に動画リストが生成されます -->
+                <ul>
+                    <li>
+                        <img src="/images/play_button.png" alt="Play" class="play-button">
+                        <span>We are bulletproof the Eternal - BTS</span>
+                    </li>
+                    <li>
+                        <img src="/images/play_button.png" alt="Play" class="play-button">
+                        <span>Promise - Jimin</span>
+                    </li>
+                    <li>
+                        <img src="/images/play_button.png" alt="Play" class="play-button">
+                        <span>Danger - BTS</span>
+                    </li>
+                    <li>
+                        <img src="/images/play_button.png" alt="Play" class="play-button">
+                        <span>Roller Coaster - Chung Ha</span>
+                    </li>
+                    <li>
+                        <img src="/images/play_button.png" alt="Play" class="play-button">
+                        <span>Don't know what to do - BlackPink</span>
+                    </li>
+                    <li>
+                        <img src="/images/play_button.png" alt="Play" class="play-button">
+                        <span>Pporappippam - Sunmi</span>
+                    </li>
+                </ul>
             </div>
             <div id="pagination" class="pagination"></div>
             <div id="keyword-tags" class="tag-cloud">
                 <p>Keyword PickUp</p>
                 <ul>
-                    <li><a href="#" class="keyword-tag">lo fi asmr</a></li>
+                    <li><a href="#" class="keyword-tag">lo fi spring</a></li>
                     <li><a href="#" class="keyword-tag">lo fi jazz</a></li>
                     <li><a href="#" class="keyword-tag">lo fi rain</a></li>
                     <li><a href="#" class="keyword-tag">lo fi sleep</a></li>
@@ -137,6 +162,34 @@ header("Content-Security-Policy: script-src 'self' https://apis.google.com https
         </div>
         <p>&copy; 2016 More Playlist</p>
     </footer>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            function updateButtonState(button, isPlaying) {
+                if (isPlaying) {
+                    button.src = '/images/pause_button.png';
+                    button.classList.remove('play-button');
+                    button.classList.add('pause-button');
+                } else {
+                    button.src = '/images/play_button.png';
+                    button.classList.remove('pause-button');
+                    button.classList.add('play-button');
+[O                }
+            }
+
+            document.querySelectorAll('.play-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    updateButtonState(button, true);
+                    // 再生処理を実行
+                });
+            });
+
+            document.querySelectorAll('.pause-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    updateButtonState(button, false);
+                    // 一時停止処理を実行
+                });
+            });
+        });
+    </script>
 </body>
 </html>
-

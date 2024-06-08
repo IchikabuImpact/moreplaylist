@@ -53,9 +53,22 @@ body {
 }
 
 #video-list ul li {
+    display: flex;
+    align-items: center;
     position: relative;
     padding-left: 0; /* 元の状態に戻す */
     margin-bottom: 10px; /* 各リストアイテムの下に余白を追加 */
+}
+
+.play-button, .pause-button {
+    width: 24px; /* テキストと同じサイズに調整 */
+    height: 24px;
+    cursor: pointer;
+    margin-right: 8px;
+}
+
+#video-list span {
+    font-size: 16px; /* テキストのサイズを指定 */
 }
 
 #pagination {
