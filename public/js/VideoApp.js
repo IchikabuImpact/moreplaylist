@@ -113,22 +113,29 @@ export default class VideoApp {
 
     attachClickEvents() {
         console.log('attachClickEvents called');
-        $('#video-list img.play-button').on('click', (event) => {
+        $('#video-list').on('click', 'img.play-button', (event) => {
             event.preventDefault();
             const button = event.target;
             const videoId = $(button).data('video-id');
             console.log('Play button clicked, videoId:', videoId);
             $('#videoInfo').data('current-video-id', videoId);
             this.playVideo(videoId);
+            this.resetPauseButtons();
             this.updateButtonState(button, true);
         });
 
-        $('#video-list img.pause-button').on('click', (event) => {
+        $('#video-list').on('click', 'img.pause-button', (event) => {
             event.preventDefault();
             const button = event.target;
             console.log('Pause button clicked');
             this.updateButtonState(button, false);
             // 一時停止処理を実行（必要に応じて追加）
+        });
+    }
+
+    resetPauseButtons() {
+        $('#video-list img.pause-button').each((index, button) => {
+            this.updateButtonState(button, false);
         });
     }
 
