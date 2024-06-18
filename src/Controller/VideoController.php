@@ -195,10 +195,19 @@ class VideoController
 
             $data = [];
             foreach ($playlistItemsResponse->items as $item) {
+                $title = $item->snippet->title;
+                $videoId = $item->snippet->resourceId->videoId;
+                $thumbnail = isset($item->snippet->thumbnails->medium->url) ? $item->snippet->thumbnails->medium->url : null;
+
+                // 削除された動画をスキップ
+                if ($title === 'Deleted video' || $videoId === 'Deleted video' || $thumbnail === null) {
+                    continue;
+                }
+
                 $data[] = [
-                    'title' => $item->snippet->title,
-                    'videoId' => $item->snippet->resourceId->videoId,
-                    'thumbnail' => $item->snippet->thumbnails->medium->url,
+                    'title' => htmlspecialchars($title, ENT_QUOTES, 'UTF-8'),
+                    'videoId' => htmlspecialchars($videoId, ENT_QUOTES, 'UTF-8'),
+                    'thumbnail' => htmlspecialchars($thumbnail, ENT_QUOTES, 'UTF-8'),
                 ];
             }
 
@@ -219,7 +228,6 @@ class VideoController
             return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
     }
-
     public function generateShareUrl(Request $request, Response $response, $args)
     {
         $playlistId = $request->getQueryParams()['playlistId'] ?? null;

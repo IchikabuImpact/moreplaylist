@@ -69,7 +69,7 @@
                                     if (isset($token['access_token'])): ?>
                                         <p>Share Playlist by URL:</p>
                                         <input type="hidden" id="share_url_shorten" size="20" value="">
-                                        <input type="text" id="feed_share_url" name="feed_share_url" value="">
+                                        <input type="text" id="feed_share_url" name="feed_share_url" value="" readonly>
                                         <button id="copyButton" data-ajax="false" onclick="updateClipboard(document.getElementById('feed_share_url').value)">Copy</button>
                                     <?php endif;
                                 } ?>

@@ -64,7 +64,13 @@ document.addEventListener('DOMContentLoaded', (event) => {
                         },
                         error: function (jqXHR, textStatus, errorThrown) {
                             console.error('AJAX Error: ' + textStatus + ': ' + errorThrown);
-                            $('#video-list').html('<p>Failed to load videos. ' + textStatus + ': ' + errorThrown + '</p>');
+                            let errorMsg = 'Failed to load videos. ' + textStatus + ': ' + errorThrown;
+                            if (jqXHR.responseJSON && jqXHR.responseJSON.error) {
+                                errorMsg += ' - ' + jqXHR.responseJSON.error;
+                            } else if (jqXHR.responseText) {
+                                errorMsg += ' - ' + jqXHR.responseText;
+                            }
+                            $('#video-list').html('<p>' + errorMsg + '</p>');
                         }
                     });
                 }
