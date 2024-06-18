@@ -121,19 +121,10 @@ class VideoController
 
     public function checkLogin(Request $request, Response $response, $args)
     {
-        // セッション内容をエラーログに出力
         $this->logger->debug('Session contents: ' . print_r($this->session->get('token'), true));
-
-        // ログイン状態のチェック
         $loggedIn = $this->authenticateClient();
-
-        // ログを追加
         $this->logger->info('checkLogin called, loggedIn: ' . ($loggedIn ? 'true' : 'false'));
-
-        // レスポンスの作成
         $response->getBody()->write(json_encode(['loggedIn' => $loggedIn]));
-
-        // レスポンスにヘッダーを追加して返す
         return $response->withHeader('Content-Type', 'application/json');
     }
 
@@ -199,7 +190,6 @@ class VideoController
                 $videoId = $item->snippet->resourceId->videoId;
                 $thumbnail = isset($item->snippet->thumbnails->medium->url) ? $item->snippet->thumbnails->medium->url : null;
 
-                // 削除された動画をスキップ
                 if ($title === 'Deleted video' || $videoId === 'Deleted video' || $thumbnail === null) {
                     continue;
                 }
@@ -228,6 +218,59 @@ class VideoController
             return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
     }
+
+    public static function getPlaylistIdFromUrl($url)
+    {
+        parse_str(parse_url($url, PHP_URL_QUERY), $queryParams);
+        return $queryParams['list'] ?? null;
+    }
+
+    public static function getVideosFromPlaylist($playlistId, $pageToken = null)
+    {
+        $client = new Client();
+        $client->setAuthConfig('/var/www/moreplaylistdev/client_secret.json');
+        $client->setDeveloperKey($_SERVER['GOOGLE_DEVELOPER_KEY']);
+        $client->setScopes([
+            'https://www.googleapis.com/auth/youtube',
+            'https://www.googleapis.com/auth/youtube.force-ssl',
+            'https://www.googleapis.com/auth/userinfo.email',
+            'https://www.googleapis.com/auth/userinfo.profile'
+        ]);
+
+        $youtube = new YouTube($client);
+
+        $videos = [];
+        try {
+            $params = [
+                'playlistId' => $playlistId,
+                'maxResults' => 20,
+            ];
+
+            if ($pageToken) {
+                $params['pageToken'] = $pageToken;
+            }
+
+            $playlistItemsResponse = $youtube->playlistItems->listPlaylistItems('id,snippet', $params);
+
+            foreach ($playlistItemsResponse->items as $item) {
+                $videos[] = [
+                    'title' => $item->snippet->title,
+                    'videoId' => $item->snippet->resourceId->videoId,
+                    'thumbnail' => $item->snippet->thumbnails->medium->url,
+                ];
+            }
+
+            $nextPageToken = $playlistItemsResponse->nextPageToken ?? null;
+            $prevPageToken = $playlistItemsResponse->prevPageToken ?? null;
+
+            return ['videos' => $videos, 'nextPageToken' => $nextPageToken, 'prevPageToken' => $prevPageToken];
+
+        } catch (\Exception $e) {
+            error_log('YouTube API error: ' . $e->getMessage());
+            return ['videos' => $videos, 'nextPageToken' => null, 'prevPageToken' => null];
+        }
+    }
+
     public function generateShareUrl(Request $request, Response $response, $args)
     {
         $playlistId = $request->getQueryParams()['playlistId'] ?? null;
@@ -267,7 +310,6 @@ class VideoController
         $youtube = new YouTube($this->client);
 
         try {
-            // 新しい再生リストを作成
             $playlistSnippet = new YouTube\PlaylistSnippet();
             $playlistSnippet->setTitle($playlistTitle);
             $playlistSnippet->setDescription('A new playlist created from API');
@@ -282,7 +324,6 @@ class VideoController
 
             $playlistId = $playlistResponse['id'];
 
-            // 動画を再生リストに追加
             $playlistItemSnippet = new YouTube\PlaylistItemSnippet();
             $playlistItemSnippet->setPlaylistId($playlistId);
             $playlistItemSnippet->setResourceId(new YouTube\ResourceId([
@@ -322,7 +363,6 @@ class VideoController
         $youtube = new YouTube($this->client);
 
         try {
-            // 動画を既存の再生リストに追加
             $playlistItemSnippet = new YouTube\PlaylistItemSnippet();
             $playlistItemSnippet->setPlaylistId($playlistId);
             $playlistItemSnippet->setResourceId(new YouTube\ResourceId([

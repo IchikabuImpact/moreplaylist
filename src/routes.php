@@ -10,13 +10,12 @@ use Slim\Exception\HttpNotFoundException;
 use App\Utils\SessionManager;
 use App\Utils\LogManager;
 use App\Controller\VideoController;
+use App\Controller\IndexController;
 
-// セッション管理とログ管理のインスタンス化
 $session = new SessionManager();
 $logManager = new LogManager();
 $logger = $logManager->getLogger();
 
-// 許可されたURIのリスト
 $allowedUris = [
     '/',
     '/Index',
@@ -33,7 +32,6 @@ $allowedUris = [
     '/api/add-to-existing-playlist',
 ];
 
-// URIが許可されているかをチェックするミドルウェア
 $uriCheckMiddleware = function (Request $request, RequestHandlerInterface $handler) use ($allowedUris, $app, $logger) {
     $uri = $request->getUri()->getPath();
     if (!in_array($uri, $allowedUris)) {
@@ -45,10 +43,8 @@ $uriCheckMiddleware = function (Request $request, RequestHandlerInterface $handl
     return $handler->handle($request);
 };
 
-// ミドルウェアを追加
 $app->add($uriCheckMiddleware);
 
-// 共通のAPIルート設定関数
 function setApiRoutes(RouteCollectorProxy $group, SessionManager $session, LogManager $logManager) {
     $logger = $logManager->getLogger();
     $group->map(['GET', 'POST'], '/videos', function (Request $request, Response $response, $args) use ($session, $logManager, $logger) {
@@ -81,7 +77,6 @@ function setApiRoutes(RouteCollectorProxy $group, SessionManager $session, LogMa
     });
 }
 
-// APIルートの設定
 $app->group('/api', function (RouteCollectorProxy $group) use ($session, $logManager) {
     setApiRoutes($group, $session, $logManager);
 });
@@ -96,48 +91,16 @@ $app->get('/csrf-token', function (Request $request, Response $response, $args) 
     return $response->withHeader('Content-Type', 'application/json');
 });
 
-$app->get('/', function (Request $request, Response $response, $args) use ($session, $logger) {
-    $view = $this->get('view');
-    $feedUrl = $request->getQueryParams()['feed_url'] ?? null;
-    $userName = $session->get('user_name');
-    $logger->info('Accessed root URL', ['feed_url' => $feedUrl, 'user_name' => $userName]);
-
-    if ($feedUrl) {
-        $playlistId = getPlaylistIdFromUrl($feedUrl);
-        $videos = getVideosFromPlaylist($playlistId);
-
-        return $view->render($response, 'index.phtml', [
-            'auth_url' => '',
-            'videos' => $videos,
-            'user_name' => $userName
-        ]);
-    } else {
-        return $view->render($response, 'index.phtml');
-    }
+$app->get('/', function (Request $request, Response $response, $args) use ($session, $logManager, $app) {
+    $view = $app->getContainer()->get('view');
+    $controller = new IndexController($session, $logManager, $view);
+    return $controller->handleRootAndIndex($request, $response);
 });
 
-$app->get('/Index', function (Request $request, Response $response, $args) use ($session, $logger) {
-    $view = $this->get('view');
-    $feedUrl = $request->getQueryParams()['feed_url'] ?? null;
-    $userName = $session->get('user_name');
-    $logger->info('Accessed /Index URL', ['feed_url' => $feedUrl, 'user_name' => $userName]);
-
-    if ($feedUrl) {
-        $playlistId = getPlaylistIdFromUrl($feedUrl);
-        $videos = getVideosFromPlaylist($playlistId);
-
-        return $view->render($response, 'index.phtml', [
-            'auth_url' => '',
-            'videos' => $videos,
-            'user_name' => $userName
-        ]);
-    } else {
-        if (!$session->get('token')) {
-            return $view->render($response, 'index.phtml', ['auth_url' => '/Index/oauth', 'videos' => [], 'user_name' => $userName]);
-        } else {
-            return $view->render($response, 'index.phtml', ['auth_url' => '', 'videos' => [], 'user_name' => $userName]);
-        }
-    }
+$app->get('/Index', function (Request $request, Response $response, $args) use ($session, $logManager, $app) {
+    $view = $app->getContainer()->get('view');
+    $controller = new IndexController($session, $logManager, $view);
+    return $controller->handleRootAndIndex($request, $response);
 });
 
 $app->get('/logout', function (Request $request, Response $response, $args) use ($session, $logger) {
@@ -204,55 +167,4 @@ $app->get('/Index/share', function (Request $request, Response $response, $args)
     $logger->info('Accessed /Index/share URL', ['feed_url' => $feedUrl]);
     return $view->render($response, 'share.phtml', ['feed_url' => $feedUrl]);
 });
-
-// YouTube APIを使用して再生リストの動画を取得する関数
-function getPlaylistIdFromUrl($url) {
-    parse_str(parse_url($url, PHP_URL_QUERY), $queryParams);
-    return $queryParams['list'] ?? null;
-}
-
-function getVideosFromPlaylist($playlistId, $pageToken = null) {
-    $client = new Google\Client();
-    $client->setAuthConfig('/var/www/moreplaylistdev/client_secret.json'); // 適切なパスに変更
-    $client->setDeveloperKey($_SERVER['GOOGLE_DEVELOPER_KEY']);
-    $client->setScopes([
-        'https://www.googleapis.com/auth/youtube',
-        'https://www.googleapis.com/auth/youtube.force-ssl',
-        'https://www.googleapis.com/auth/userinfo.email',
-        'https://www.googleapis.com/auth/userinfo.profile'
-    ]);
-
-    $youtube = new Google\Service\YouTube($client);
-
-    $videos = [];
-    try {
-        $params = [
-            'playlistId' => $playlistId,
-            'maxResults' => 20,
-        ];
-
-        if ($pageToken) {
-            $params['pageToken'] = $pageToken;
-        }
-
-        $playlistItemsResponse = $youtube->playlistItems->listPlaylistItems('id,snippet', $params);
-
-        foreach ($playlistItemsResponse->items as $item) {
-            $videos[] = [
-                'title' => $item->snippet->title,
-                'videoId' => $item->snippet->resourceId->videoId,
-                'thumbnail' => $item->snippet->thumbnails->medium->url,
-            ];
-        }
-
-        $nextPageToken = $playlistItemsResponse->nextPageToken ?? null;
-        $prevPageToken = $playlistItemsResponse->prevPageToken ?? null;
-
-        return ['videos' => $videos, 'nextPageToken' => $nextPageToken, 'prevPageToken' => $prevPageToken];
-
-    } catch (\Exception $e) {
-        error_log('YouTube API error: ' . $e->getMessage());
-        return ['videos' => $videos, 'nextPageToken' => null, 'prevPageToken' => null];
-    }
-}
 

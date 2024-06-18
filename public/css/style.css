@@ -45,6 +45,7 @@ body {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     margin: 20px auto;
     max-width: 800px; /* 動画一覧の最大幅を設定 */
+    z-index: 1;
 }
 
 #video-list ul {
@@ -141,12 +142,13 @@ body {
     position: fixed;
     left: 0;
     width: 250px;
-    margin-top: 60px;
+    margin-top: 0px;
     transform: translateX(-250px);
     transition: transform 250ms ease-in-out;
     background: linear-gradient(180deg, #FC466B 0%, #3F5EFB 100%);
     box-sizing: border-box;
     padding: 10px;
+    z-index: 1000;
 }
 
 .sidebarMenuInner {
