@@ -9,6 +9,7 @@ use Google\Service\Oauth2;
 use Slim\Exception\HttpNotFoundException;
 use App\Utils\SessionManager;
 use App\Utils\LogManager;
+use App\Controller\VideoController;
 
 // セッション管理とログ管理のインスタンス化
 $session = new SessionManager();
@@ -51,31 +52,31 @@ $app->add($uriCheckMiddleware);
 function setApiRoutes(RouteCollectorProxy $group, SessionManager $session, LogManager $logManager) {
     $logger = $logManager->getLogger();
     $group->map(['GET', 'POST'], '/videos', function (Request $request, Response $response, $args) use ($session, $logManager, $logger) {
-        $controller = new App\Controller\VideoController($session, $logManager);
+        $controller = new VideoController($session, $logManager);
         return $controller->getVideos($request, $response, $args);
     });
     $group->get('/playlists', function (Request $request, Response $response, $args) use ($session, $logManager, $logger) {
-        $controller = new App\Controller\VideoController($session, $logManager);
+        $controller = new VideoController($session, $logManager);
         return $controller->getPlaylists($request, $response, $args);
     });
     $group->get('/playlist-videos', function (Request $request, Response $response, $args) use ($session, $logManager, $logger) {
-        $controller = new App\Controller\VideoController($session, $logManager);
+        $controller = new VideoController($session, $logManager);
         return $controller->getPlaylistVideos($request, $response, $args);
     });
     $group->get('/check-login', function (Request $request, Response $response, $args) use ($session, $logManager, $logger) {
-        $controller = new App\Controller\VideoController($session, $logManager);
+        $controller = new VideoController($session, $logManager);
         return $controller->checkLogin($request, $response, $args);
     });
     $group->get('/generate-share-url', function (Request $request, Response $response, $args) use ($session, $logManager, $logger) {
-        $controller = new App\Controller\VideoController($session, $logManager);
+        $controller = new VideoController($session, $logManager);
         return $controller->generateShareUrl($request, $response, $args);
     });
     $group->post('/add-playlist', function (Request $request, Response $response, $args) use ($session, $logManager, $logger) {
-        $controller = new App\Controller\VideoController($session, $logManager);
+        $controller = new VideoController($session, $logManager);
         return $controller->addPlaylist($request, $response, $args);
     });
     $group->post('/add-to-existing-playlist', function (Request $request, Response $response, $args) use ($session, $logManager, $logger) {
-        $controller = new App\Controller\VideoController($session, $logManager);
+        $controller = new VideoController($session, $logManager);
         return $controller->addToExistingPlaylist($request, $response, $args);
     });
 }
@@ -90,7 +91,8 @@ $app->get('/csrf-token', function (Request $request, Response $response, $args) 
     $session->set('csrf_token', $csrfToken);
     $data = ['csrf_token' => $csrfToken];
     $logger->info('CSRF token generated', ['csrf_token' => $csrfToken]);
-    $response->getBody()->write(json_encode($data));
+    $payload = json_encode($data, JSON_UNESCAPED_UNICODE);
+    $response->getBody()->write($payload);
     return $response->withHeader('Content-Type', 'application/json');
 });
 
@@ -253,3 +255,4 @@ function getVideosFromPlaylist($playlistId, $pageToken = null) {
         return ['videos' => $videos, 'nextPageToken' => null, 'prevPageToken' => null];
     }
 }
+

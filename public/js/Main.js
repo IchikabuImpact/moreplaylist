@@ -16,7 +16,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
             console.log('User is logged in, fetching playlists...');
             videoApp.updatePlaylistsDropdown();
 
-            $('#playlists').on('change', function () {
+            $('#playlists').on('change', function (event) {
+                videoApp.handlePlaylistChange(event);
                 var playlistId = $(this).val();
                 console.log('Playlist changed, playlistId:', playlistId);
                 if (playlistId) {
@@ -66,33 +67,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
                             $('#video-list').html('<p>Failed to load videos. ' + textStatus + ': ' + errorThrown + '</p>');
                         }
                     });
-
-                    $.ajax({
-                        url: '/api/generate-share-url',
-                        method: 'GET',
-                        data: { playlistId: playlistId },
-                        success: function (data) {
-                            console.log('generate-share-url API called, data received:', data);
-                            try {
-                                if (typeof data === 'string') {
-                                    data = JSON.parse(data);
-                                }
-
-                                if (data.share_url) {
-                                    $('#feed_share_url').val(data.share_url);
-                                } else {
-                                    throw new Error('Share URL not provided');
-                                }
-                            } catch (e) {
-                                console.error('Error parsing JSON:', e);
-                                alert('Error generating share URL.');
-                            }
-                        },
-                        error: function (jqXHR, textStatus, errorThrown) {
-                            console.error('AJAX Error: ' + textStatus + ': ' + errorThrown);
-                            alert('Failed to generate share URL. ' + textStatus + ': ' + errorThrown);
-                        }
-                    });
                 }
             });
         } else {
@@ -116,6 +90,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
         videoApp.feeds_from_keyword(keyword);
     });
 });
+
 window.onerror = function (message, source, lineno, colno, error) {
     if (source.includes('youtube')) {
         console.log('YouTube player error ignored:', message);

@@ -10,6 +10,7 @@ export default class VideoApp {
     setupEventListeners() {
         const logoutLink = document.getElementById('logoutLink');
         const copyButton = document.getElementById('copyButton');
+        const playlistsDropdown = document.getElementById('playlists');
 
         if (logoutLink) {
             logoutLink.addEventListener('click', this.handleLogout);
@@ -17,6 +18,10 @@ export default class VideoApp {
 
         if (copyButton) {
             copyButton.addEventListener('click', this.handleCopy);
+        }
+
+        if (playlistsDropdown) {
+            playlistsDropdown.addEventListener('change', this.handlePlaylistChange.bind(this));
         }
     }
 
@@ -33,6 +38,49 @@ export default class VideoApp {
         }).catch(err => {
             console.error('クリップボードにコピーできませんでした: ', err);
         });
+    }
+
+    async generateShortUrl(originalUrl) {
+        console.log('Generating short URL for:', originalUrl);
+        try {
+            const response = await fetch('/shorten-url.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ originalUrl: originalUrl })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Short URL data:', data);
+
+            if (data.link) {
+                return data.link;
+            } else {
+                throw new Error('Failed to generate short URL');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            throw error;
+        }
+    }
+
+    async handlePlaylistChange(event) {
+        const playlistId = event.target.value;
+        if (playlistId) {
+            const originalUrl = `https://moreplaylist.appstarrocks.com/Index?feed_url=${encodeURIComponent(`https://www.youtube.com/playlist?list=${playlistId}`)}`;
+            try {
+                const shortUrl = await this.generateShortUrl(originalUrl);
+                document.getElementById('feed_share_url').value = shortUrl;
+            } catch (error) {
+                console.error('Failed to generate short URL:', error);
+                document.getElementById('feed_share_url').value = originalUrl;
+            }
+        }
     }
 
     feeds_from_keyword(keyword, pageToken = '') {

@@ -60,64 +60,64 @@ class VideoController
         return false;
     }
 
-public function getVideos(Request $request, Response $response, $args)
-{
-    $this->logger->info('VideoController::getVideos called');
-    $params = (array)$request->getQueryParams();
-    $keyword = $params['keyword'] ?? 'Lo-Fi';
-    $pageToken = $params['pageToken'] ?? null;
+    public function getVideos(Request $request, Response $response, $args)
+    {
+        $this->logger->info('VideoController::getVideos called');
+        $params = (array)$request->getQueryParams();
+        $keyword = $params['keyword'] ?? 'Lo-Fi';
+        $pageToken = $params['pageToken'] ?? null;
 
-    if ($this->session->get('token') && !$this->authenticateClient()) {
-        return $response->withHeader('Location', '/logout')->withStatus(302);
-    }
-
-    $youtube = new YouTube($this->client);
-
-    try {
-        $searchParams = [
-            'q' => $keyword,
-            'maxResults' => 20,
-        ];
-
-        if ($pageToken) {
-            $searchParams['pageToken'] = $pageToken;
+        if ($this->session->get('token') && !$this->authenticateClient()) {
+            return $response->withHeader('Location', '/logout')->withStatus(302);
         }
 
-        $searchResponse = $youtube->search->listSearch('id,snippet', $searchParams);
+        $youtube = new YouTube($this->client);
 
-        $data = [];
-        foreach ($searchResponse->items as $item) {
-            $data[] = [
-                'title' => $item->snippet->title,
-                'videoId' => $item->id->videoId,
-                'thumbnail' => $item->snippet->thumbnails->medium->url,
+        try {
+            $searchParams = [
+                'q' => $keyword,
+                'maxResults' => 20,
             ];
-        }
 
-        $nextPageToken = $searchResponse->nextPageToken ?? null;
-        $prevPageToken = $searchResponse->prevPageToken ?? null;
+            if ($pageToken) {
+                $searchParams['pageToken'] = $pageToken;
+            }
 
-        $responseBody = [
-            'videos' => $data,
-            'nextPageToken' => $nextPageToken,
-            'prevPageToken' => $prevPageToken,
-        ];
+            $searchResponse = $youtube->search->listSearch('id,snippet', $searchParams);
 
-        $json = json_encode($responseBody, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            $this->logger->error('JSON encode error: ' . json_last_error_msg());
-            $response->getBody()->write(json_encode(['error' => 'Internal server error.']));
+            $data = [];
+            foreach ($searchResponse->items as $item) {
+                $data[] = [
+                    'title' => $item->snippet->title,
+                    'videoId' => $item->id->videoId,
+                    'thumbnail' => $item->snippet->thumbnails->medium->url,
+                ];
+            }
+
+            $nextPageToken = $searchResponse->nextPageToken ?? null;
+            $prevPageToken = $searchResponse->prevPageToken ?? null;
+
+            $responseBody = [
+                'videos' => $data,
+                'nextPageToken' => $nextPageToken,
+                'prevPageToken' => $prevPageToken,
+            ];
+
+            $json = json_encode($responseBody, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                $this->logger->error('JSON encode error: ' . json_last_error_msg());
+                $response->getBody()->write(json_encode(['error' => 'Internal server error.']));
+                return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+            }
+
+            $response->getBody()->write($json);
+            return $response->withHeader('Content-Type', 'application/json');
+        } catch (\Exception $e) {
+            $this->logger->error('YouTube API error: ' . $e->getMessage());
+            $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
             return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
-
-        $response->getBody()->write($json);
-        return $response->withHeader('Content-Type', 'application/json');
-    } catch (\Exception $e) {
-        $this->logger->error('YouTube API error: ' . $e->getMessage());
-        $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
-        return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
     }
-}
 
     public function checkLogin(Request $request, Response $response, $args)
     {
