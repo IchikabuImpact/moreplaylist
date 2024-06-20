@@ -15,6 +15,7 @@
     <script src="/js/cookieconsent.min.js"></script>
     <script type="module" src="/js/VideoApp.js"></script>
     <script type="module" src="/js/Main.js"></script>
+    <script src="/js/inline-scripts.js"></script>
 </head>
 <body>
     <div class="header"></div>
@@ -70,7 +71,7 @@
                                         <p>Share Playlist by URL:</p>
                                         <input type="hidden" id="share_url_shorten" size="20" value="">
                                         <input type="text" id="feed_share_url" name="feed_share_url" value="" readonly>
-                                        <button id="copyButton" data-ajax="false" onclick="updateClipboard(document.getElementById('feed_share_url').value)">Copy</button>
+                                        <button id="copyButton" data-ajax="false">Copy</button>
                                     <?php endif;
                                 } ?>
                             </div>
@@ -159,35 +160,6 @@
         </div>
         <p>&copy; 2016 More Playlist</p>
     </footer>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            function updateButtonState(button, isPlaying) {
-                if (isPlaying) {
-                    button.src = '/images/pause_button.png';
-                    button.classList.remove('play-button');
-                    button.classList.add('pause-button');
-                } else {
-                    button.src = '/images/play_button.png';
-                    button.classList.remove('pause-button');
-                    button.classList.add('play-button');
-                }
-            }
-
-            document.querySelectorAll('.play-button').forEach(button => {
-                button.addEventListener('click', () => {
-                    updateButtonState(button, true);
-                    // 再生処理を実行
-                });
-            });
-
-            document.querySelectorAll('.pause-button').forEach(button => {
-                button.addEventListener('click', () => {
-                    updateButtonState(button, false);
-                    // 一時停止処理を実行
-                });
-            });
-        });
-    </script>
 </body>
 </html>
 

@@ -11,6 +11,7 @@ export default class VideoApp {
         const logoutLink = document.getElementById('logoutLink');
         const copyButton = document.getElementById('copyButton');
         const playlistsDropdown = document.getElementById('playlists');
+        const shuffleButton = document.getElementById('shuffleButton');
 
         if (logoutLink) {
             logoutLink.addEventListener('click', this.handleLogout);
@@ -22,6 +23,10 @@ export default class VideoApp {
 
         if (playlistsDropdown) {
             playlistsDropdown.addEventListener('change', this.handlePlaylistChange.bind(this));
+        }
+
+        if (shuffleButton) {
+            shuffleButton.addEventListener('click', this.shufflePlay.bind(this));
         }
     }
 
@@ -226,6 +231,19 @@ export default class VideoApp {
                 $('#playlists').after('<p class="error">please login</p>');
             }
         });
+    }
+
+    shufflePlay() {
+        console.log('Shuffle play button clicked');
+        const videoItems = $('#video-list').find('li');
+        if (videoItems.length > 0) {
+            const randomIndex = Math.floor(Math.random() * videoItems.length);
+            const randomVideoId = $(videoItems[randomIndex]).find('.play-button').data('video-id');
+            this.playVideo(randomVideoId);
+        } else {
+            console.error('No videos found');
+            alert('No videos available to shuffle play.');
+        }
     }
 }
 

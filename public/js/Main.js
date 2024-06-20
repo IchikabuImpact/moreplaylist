@@ -45,7 +45,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
                                         }
                                         videoListHtml += `
                                             <li>
-                                                <a href="#" data-video-id="${video.videoId}">${video.title}</a>
+                                                <img src="/images/play_button.png" alt="Play" class="play-button" data-video-id="${video.videoId}">
+                                                <span>${video.title}</span>
                                             </li>
                                         `;
                                     });
@@ -54,6 +55,12 @@ document.addEventListener('DOMContentLoaded', (event) => {
                                     if (firstVideoId) {
                                         videoApp.playVideo(firstVideoId);
                                     }
+
+                                    // 再生ボタンにイベントリスナーを追加
+                                    $('.play-button').on('click', function() {
+                                        const videoId = $(this).data('video-id');
+                                        videoApp.playVideo(videoId);
+                                    });
                                 } else {
                                     throw new Error('Invalid data format');
                                 }
@@ -64,13 +71,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
                         },
                         error: function (jqXHR, textStatus, errorThrown) {
                             console.error('AJAX Error: ' + textStatus + ': ' + errorThrown);
-                            let errorMsg = 'Failed to load videos. ' + textStatus + ': ' + errorThrown;
-                            if (jqXHR.responseJSON && jqXHR.responseJSON.error) {
-                                errorMsg += ' - ' + jqXHR.responseJSON.error;
-                            } else if (jqXHR.responseText) {
-                                errorMsg += ' - ' + jqXHR.responseText;
-                            }
-                            $('#video-list').html('<p>' + errorMsg + '</p>');
+                            $('#video-list').html('<p>Failed to load videos. ' + textStatus + ': ' + errorThrown + '</p>');
                         }
                     });
                 }
