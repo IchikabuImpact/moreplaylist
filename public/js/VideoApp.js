@@ -183,6 +183,9 @@ export default class VideoApp {
             console.log('Pause button clicked');
             this.updateButtonState(button, false);
             // 一時停止処理を実行（必要に応じて追加）
+            // 一時停止がこれじゃないと動かないので暫定的に対応
+            document.getElementById('player').contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+
         });
     }
 
