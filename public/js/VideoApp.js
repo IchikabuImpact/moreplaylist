@@ -77,7 +77,7 @@ export default class VideoApp {
     async handlePlaylistChange(event) {
         const playlistId = event.target.value;
         if (playlistId) {
-            const originalUrl = `https://moreplaylist.appstarrocks.com/Index?feed_url=${encodeURIComponent(`https://www.youtube.com/playlist?list=${playlistId}`)}`;
+            const originalUrl = `${window.location.origin}/Index?feed_url=${encodeURIComponent(`https://www.youtube.com/playlist?list=${playlistId}`)}`;
             try {
                 const shortUrl = await this.generateShortUrl(originalUrl);
                 document.getElementById('feed_share_url').value = shortUrl;
@@ -160,7 +160,7 @@ export default class VideoApp {
 
     playVideo(videoId) {
         console.log('playVideo called with videoId:', videoId);
-        var playerUrl = 'https://www.youtube.com/embed/' + videoId + '?rel=1&showinfo=0&controls=1&autoplay=1&enablejsapi=1&allowScriptAccess=always&origin=https://moreplaylist.appstarrocks.com&widgetid=1';
+        var playerUrl = `https://www.youtube.com/embed/${videoId}?rel=1&showinfo=0&controls=1&autoplay=1&enablejsapi=1&allowScriptAccess=always&origin=${window.location.origin}&widgetid=1`;
         $('#player').attr('src', playerUrl);
     }
 
