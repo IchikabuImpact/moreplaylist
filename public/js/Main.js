@@ -8,7 +8,17 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
     if (feedUrl) {
         console.log('feed_url detected:', feedUrl);
-        videoApp.feeds_from_feed_url(feedUrl);
+        // サーバーサイドからの動画リストが存在するか確認
+        const serverRenderedVideos = []; // サーバーサイドから渡された動画リストがここに格納される想定
+
+        if (serverRenderedVideos.length > 0) {
+            videoApp.renderVideos(serverRenderedVideos);
+            if (serverRenderedVideos[0] && serverRenderedVideos[0].videoId) {
+                videoApp.playVideo(serverRenderedVideos[0].videoId);
+            }
+        } else {
+            videoApp.feeds_from_feed_url(feedUrl);
+        }
     } else {
         videoApp.feeds_from_keyword('Lo-Fi'); // feed_urlがない場合のみ呼び出し
     }
@@ -114,5 +124,4 @@ window.onerror = function (message, source, lineno, colno, error) {
     }
     return false; // 他のエラーは通常通り処理されます
 };
-
 
