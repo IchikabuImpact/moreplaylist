@@ -60,18 +60,100 @@ class VideoController
         return false;
     }
 
-    public function getVideos(Request $request, Response $response, $args)
-    {
-        $this->logger->info('VideoController::getVideos called');
-        $params = (array)$request->getQueryParams();
-        $keyword = $params['keyword'] ?? 'Lo-Fi';
-        $pageToken = $params['pageToken'] ?? null;
+public function getVideos(Request $request, Response $response, $args)
+{
+    $this->logger->info('VideoController::getVideos called');
 
-        if ($this->session->get('token') && !$this->authenticateClient()) {
-            return $response->withHeader('Location', '/logout')->withStatus(302);
+    // クエリパラメータを取得
+    $queryParams = $request->getQueryParams();
+    $this->logger->info('queryParams value', ['queryParams' => $queryParams]);
+
+    // feed_url を取得し、URLデコードする
+    $feedUrl = isset($queryParams['feed_url']) ? urldecode($queryParams['feed_url']) : null;
+    $this->logger->info('feed_url value', ['feed_url' => $feedUrl]);
+
+    $youtube = new YouTube($this->client);
+
+    try {
+        if ($feedUrl) {
+            $this->logger->info('Feed URL detected', ['feed_url' => $feedUrl]);
+            $playlistId = $this->extractPlaylistId($feedUrl);
+            if ($playlistId) {
+                $this->logger->info('Extracted playlist ID', ['playlistId' => $playlistId]);
+                $playlistItems = $youtube->playlistItems->listPlaylistItems('snippet', ['playlistId' => $playlistId]);
+
+                $videos = [];
+                foreach ($playlistItems['items'] as $item) {
+                    $thumbnails = $item['snippet']['thumbnails']['default'] ?? null;
+                    $videos[] = [
+                        'title' => $item['snippet']['title'],
+                        'videoId' => $item['snippet']['resourceId']['videoId'] ?? null,
+                        'thumbnail' => $thumbnails ? $thumbnails['url'] : null,
+                    ];
+                }
+
+                $this->logger->info('Videos retrieved successfully from playlist', ['videos' => $videos]);
+                $response->getBody()->write(json_encode(['videos' => $videos]));
+                return $response->withHeader('Content-Type', 'application/json');
+            } else {
+                $this->logger->error('Failed to extract playlist ID from feed URL');
+            }
         }
 
-        $youtube = new YouTube($this->client);
+        $this->logger->info('No valid feed URL provided, performing search');
+        $searchQuery = $queryParams['keyword'] ?? 'Lo-Fi';
+
+        $searchResponse = $youtube->search->listSearch('snippet', [
+            'q' => $searchQuery,
+            'maxResults' => 10,
+        ]);
+
+        $videos = [];
+        foreach ($searchResponse['items'] as $searchResult) {
+            $thumbnails = $searchResult['snippet']['thumbnails']['default'] ?? null;
+            $videos[] = [
+                'title' => $searchResult['snippet']['title'],
+                'videoId' => $searchResult['id']['videoId'] ?? null,
+                'thumbnail' => $thumbnails ? $thumbnails['url'] : null,
+            ];
+        }
+
+        $this->logger->info('Search results retrieved successfully', ['videos' => $videos]);
+        $response->getBody()->write(json_encode(['videos' => $videos]));
+        return $response->withHeader('Content-Type', 'application/json');
+    } catch (\Exception $e) {
+        $this->logger->error('YouTube API error: ' . $e->getMessage());
+        $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
+        return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+    }
+}
+
+private function extractPlaylistId($feedUrl)
+{
+    $this->logger->info('Extracting playlist ID from feed URL', ['feed_url' => $feedUrl]);
+
+    parse_str(parse_url($feedUrl, PHP_URL_QUERY), $queryParams);
+    $playlistId = $queryParams['list'] ?? null;
+
+    $this->logger->info('Extracted playlist ID from feed URL', ['playlistId' => $playlistId, 'feed_url' => $feedUrl, 'queryParams' => $queryParams]);
+    return $playlistId;
+}
+
+
+
+    public static function getVideosByKeyword($keyword)
+    {
+        $client = new Client();
+        $client->setAuthConfig('/var/www/moreplaylistdev/client_secret.json');
+        $client->setDeveloperKey($_SERVER['GOOGLE_DEVELOPER_KEY']);
+        $client->setScopes([
+            'https://www.googleapis.com/auth/youtube',
+            'https://www.googleapis.com/auth/youtube.force-ssl',
+            'https://www.googleapis.com/auth/userinfo.email',
+            'https://www.googleapis.com/auth/userinfo.profile'
+        ]);
+
+        $youtube = new YouTube($client);
 
         try {
             $searchParams = [
@@ -79,43 +161,21 @@ class VideoController
                 'maxResults' => 20,
             ];
 
-            if ($pageToken) {
-                $searchParams['pageToken'] = $pageToken;
-            }
-
             $searchResponse = $youtube->search->listSearch('id,snippet', $searchParams);
 
-            $data = [];
+            $videos = [];
             foreach ($searchResponse->items as $item) {
-                $data[] = [
+                $videos[] = [
                     'title' => $item->snippet->title,
                     'videoId' => $item->id->videoId,
                     'thumbnail' => $item->snippet->thumbnails->medium->url,
                 ];
             }
 
-            $nextPageToken = $searchResponse->nextPageToken ?? null;
-            $prevPageToken = $searchResponse->prevPageToken ?? null;
-
-            $responseBody = [
-                'videos' => $data,
-                'nextPageToken' => $nextPageToken,
-                'prevPageToken' => $prevPageToken,
-            ];
-
-            $json = json_encode($responseBody, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                $this->logger->error('JSON encode error: ' . json_last_error_msg());
-                $response->getBody()->write(json_encode(['error' => 'Internal server error.']));
-                return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
-            }
-
-            $response->getBody()->write($json);
-            return $response->withHeader('Content-Type', 'application/json');
+            return $videos;
         } catch (\Exception $e) {
-            $this->logger->error('YouTube API error: ' . $e->getMessage());
-            $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
-            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+            error_log('YouTube API error: ' . $e->getMessage());
+            return [];
         }
     }
 
@@ -253,10 +313,11 @@ class VideoController
             $playlistItemsResponse = $youtube->playlistItems->listPlaylistItems('id,snippet', $params);
 
             foreach ($playlistItemsResponse->items as $item) {
+                $thumbnails = $item['snippet']['thumbnails']['default'] ?? null;
                 $videos[] = [
-                    'title' => $item->snippet->title,
-                    'videoId' => $item->snippet->resourceId->videoId,
-                    'thumbnail' => $item->snippet->thumbnails->medium->url,
+                    'title' => $item['snippet']['title'],
+                    'videoId' => $item['snippet']['resourceId']['videoId'] ?? null,
+                    'thumbnail' => $thumbnails ? $thumbnails['url'] : null,
                 ];
             }
 

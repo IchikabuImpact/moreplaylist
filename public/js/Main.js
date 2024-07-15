@@ -3,12 +3,21 @@ import VideoApp from './VideoApp.js';
 document.addEventListener('DOMContentLoaded', (event) => {
     const videoApp = new VideoApp();
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const feedUrl = urlParams.get('feed_url');
+
+    if (feedUrl) {
+        console.log('feed_url detected:', feedUrl);
+        videoApp.feeds_from_feed_url(feedUrl);
+    } else {
+        videoApp.feeds_from_keyword('Lo-Fi'); // feed_urlがない場合のみ呼び出し
+    }
+
     $('#keywordForm').on('submit', function (event) {
         event.preventDefault();
         console.log('keywordForm submit, keyword:', $('#keyword').val());
         videoApp.feeds_from_keyword($('#keyword').val());
     });
-    videoApp.feeds_from_keyword('Lo-Fi');
 
     $.get('/api/check-login', function (data) {
         console.log('check-login API called, data received:', data);

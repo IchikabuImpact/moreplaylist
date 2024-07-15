@@ -248,5 +248,80 @@ export default class VideoApp {
             alert('No videos available to shuffle play.');
         }
     }
+
+feeds_from_feed_url(feedUrl) {
+    console.log('feeds_from_feed_url called with feedUrl:', feedUrl);
+    $('#videoInfo').removeData('current-video-id');
+    $.ajax({
+        url: '/api/videos',
+        method: 'GET',
+        data: { feed_url: feedUrl },
+        success: (data) => {
+            console.log('feeds_from_feed_url success, data received:', data);
+            try {
+                if (typeof data === 'string') {
+                    data = JSON.parse(data);
+                }
+
+                if (Array.isArray(data.videos)) {
+                    let videoListHtml = '<ul>';
+                    let firstVideoId = null;
+                    data.videos.forEach((video, index) => {
+                        if (index === 0) {
+                            firstVideoId = video.videoId;
+                        }
+                        videoListHtml += `
+                            <li>
+                                <img src="/images/play_button.png" alt="Play" class="play-button" data-video-id="${video.videoId}">
+                                <span>${video.title}</span>
+                            </li>
+                        `;
+                    });
+                    videoListHtml += '</ul>';
+                    $('#video-list').html(videoListHtml);
+                    if (firstVideoId) {
+                        this.playVideo(firstVideoId);
+                    }
+                    this.attachClickEvents();
+
+                    // ページングリンクの生成
+                    let paginationHtml = '';
+                    if (data.prevPageToken) {
+                        paginationHtml += `<a href="#" class="prev-page" data-page-token="${data.prevPageToken}">Previous</a>`;
+                    }
+                    if (data.prevPageToken && data.nextPageToken) {
+                        paginationHtml += ' | ';
+                    }
+                    if (data.nextPageToken) {
+                        paginationHtml += `<a href="#" class="next-page" data-page-token="${data.nextPageToken}">Next</a>`;
+                    }
+                    $('#pagination').html(paginationHtml);
+
+                    // ページングリンクのイベントリスナーを追加
+                    $('.prev-page, .next-page').on('click', (event) => {
+                        event.preventDefault();
+                        const pageToken = $(event.target).data('page-token');
+                        this.feeds_from_feed_url(feedUrl, pageToken);
+                    });
+
+                } else {
+                    throw new Error('Invalid data format');
+                }
+            } catch (e) {
+                console.error('Error parsing JSON:', e);
+                $('#video-list').html('<p>Error parsing video data.</p>');
+            }
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            console.error('AJAX Error: ' + textStatus + ': ' + errorThrown);
+            $('#video-list').html('<p>Failed to load videos. ' + textStatus + ': ' + errorThrown + '</p>');
+        }
+    });
+}
+
+
+
+
+
 }
 
