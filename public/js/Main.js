@@ -95,6 +95,18 @@ document.addEventListener('DOMContentLoaded', (event) => {
                     });
                 }
             });
+
+            $('#add_to_new_playlist').on('click', function () {
+                const playlistName = $('#new_playlist_title').val();
+                const playlistPrivacy = $('#new_playlist_privacy').val();
+                const videoId = $('#videoInfo').data('current-video-id'); // 再生中の動画IDを取得
+                if (playlistName && videoId) {
+                   videoApp.createPlaylist(playlistName, playlistPrivacy, videoId);
+                } else {
+                    alert('Please enter a name for the new playlist and ensure a video is playing.');
+                }
+            });
+
         } else {
             console.log('User is not logged in, hiding playlists');
             $('#playlists-container').hide();

@@ -29,6 +29,31 @@ export default class VideoApp {
             shuffleButton.addEventListener('click', this.shufflePlay.bind(this));
         }
     }
+async createPlaylist(playlistName, playlistPrivacy, videoId) {
+    try {
+        const response = await fetch('/api/add-playlist', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                new_playlist_title: playlistName, 
+                new_playlist_privacy: playlistPrivacy, 
+                video_id: videoId 
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Playlist created:', data);
+        this.updatePlaylistsDropdown();
+    } catch (error) {
+        console.error('Error creating playlist:', error);
+    }
+}
 
     handleLogout(event) {
         event.preventDefault();
@@ -103,7 +128,7 @@ export default class VideoApp {
                     }
 
                     if (Array.isArray(data.videos)) {
-                        let videoListHtml = '<ul>';
+                        let videoListHtml = '<div id="playlistarea"><p>Playlist</p></div><ul>';
                         let firstVideoId = null;
                         data.videos.forEach((video, index) => {
                             if (index === 0) {
@@ -264,7 +289,7 @@ feeds_from_feed_url(feedUrl) {
                 }
 
                 if (Array.isArray(data.videos)) {
-                    let videoListHtml = '<ul>';
+                    let videoListHtml = '<div id="playlistarea"><p>Playlist</p></div><ul>';
                     let firstVideoId = null;
                     data.videos.forEach((video, index) => {
                         if (index === 0) {

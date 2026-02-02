@@ -352,14 +352,14 @@ private function extractPlaylistId($feedUrl)
         return $response->withHeader('Content-Type', 'application/json');
     }
 
-    public function addPlaylist(Request $request, Response $response, $args)
-    {
+    public function addPlaylist(Request $request, Response $response, $args) {
         $params = json_decode($request->getBody()->getContents(), true);
+        $playlistName = $params['new_playlist_title'] ?? null;
+        $playlistPrivacy = $params['new_playlist_privacy'] ?? null;
         $videoId = $params['video_id'] ?? null;
-        $playlistTitle = $params['playlist_title'] ?? null;
-        $privacyStatus = $params['privacyStatus'] ?? null;
 
-        if (!$videoId || !$playlistTitle || !$privacyStatus) {
+         // バリデーション：名前、プライバシー設定、videoIdが存在することを確認
+        if (!$playlistName || !$playlistPrivacy || !$videoId) {
             $response->getBody()->write(json_encode(['error' => 'Invalid request data.']));
             return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
         }
@@ -371,23 +371,25 @@ private function extractPlaylistId($feedUrl)
         $youtube = new YouTube($this->client);
 
         try {
+            // プレイリストの作成
             $playlistSnippet = new YouTube\PlaylistSnippet();
-            $playlistSnippet->setTitle($playlistTitle);
+            $playlistSnippet->setTitle($playlistName);
             $playlistSnippet->setDescription('A new playlist created from API');
             $playlistStatus = new YouTube\PlaylistStatus();
-            $playlistStatus->setPrivacyStatus($privacyStatus);
+            $playlistStatus->setPrivacyStatus($playlistPrivacy);
 
-            $youTubePlaylist = new YouTube\Playlist();
-            $youTubePlaylist->setSnippet($playlistSnippet);
-            $youTubePlaylist->setStatus($playlistStatus);
+             $youTubePlaylist = new YouTube\Playlist();
+             $youTubePlaylist->setSnippet($playlistSnippet);
+             $youTubePlaylist->setStatus($playlistStatus);
 
-            $playlistResponse = $youtube->playlists->insert('snippet,status', $youTubePlaylist);
+             $playlistResponse = $youtube->playlists->insert('snippet,status', $youTubePlaylist);
 
-            $playlistId = $playlistResponse['id'];
+             $playlistId = $playlistResponse['id'];
 
-            $playlistItemSnippet = new YouTube\PlaylistItemSnippet();
-            $playlistItemSnippet->setPlaylistId($playlistId);
-            $playlistItemSnippet->setResourceId(new YouTube\ResourceId([
+             // 新規作成したプレイリストに動画を追加
+             $playlistItemSnippet = new YouTube\PlaylistItemSnippet();
+             $playlistItemSnippet->setPlaylistId($playlistId);
+             $playlistItemSnippet->setResourceId(new YouTube\ResourceId([
                 'kind' => 'youtube#video',
                 'videoId' => $videoId
             ]));
@@ -397,7 +399,7 @@ private function extractPlaylistId($feedUrl)
 
             $youtube->playlistItems->insert('snippet', $playlistItem);
 
-            $response->getBody()->write(json_encode(['success' => 'Video added to new playlist successfully.']));
+            $response->getBody()->write(json_encode(['success' => 'Playlist created and video added successfully.', 'playlistId' => $playlistId]));
             return $response->withHeader('Content-Type', 'application/json');
         } catch (\Exception $e) {
             $this->logger->error('YouTube API error: ' . $e->getMessage());
