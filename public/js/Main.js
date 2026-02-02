@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
             videoApp.feeds_from_feed_url(feedUrl);
         }
     } else {
-        videoApp.feeds_from_keyword('Lo-Fi'); // feed_urlがない場合のみ呼び出し
+        videoApp.feeds_from_keyword('lo fi jazz'); // feed_urlがない場合のみ呼び出し
     }
 
     $('#keywordForm').on('submit', function (event) {

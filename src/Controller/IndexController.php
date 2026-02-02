@@ -58,7 +58,7 @@ public function handleRootAndIndex(Request $request, Response $response)
     } else {
         // キーワードで検索
         $params = $request->getQueryParams();
-        $keyword = $params['keyword'] ?? 'Lo-Fi';
+        $keyword = $params['keyword'] ?? 'lo fi jazz';
 
         $this->logger->info('Calling getVideosByKeyword', ['keyword' => $keyword]);
         $videos = VideoController::getVideosByKeyword($keyword);
