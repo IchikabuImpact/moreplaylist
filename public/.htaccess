@@ -12,8 +12,10 @@ RewriteRule ^$ /Index [L,R=302]
 RewriteCond %{REQUEST_URI} ^/Index/$
 RewriteRule ^Index/$ /Index [L,R=301]
 
+# Short URL redirect handler
+RewriteRule ^s/([A-Za-z0-9]{6,8})$ /s/index.php?code=$1 [QSA,L]
+
 # Route requests to Slim Framework
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ index.php [QSA,L]
-

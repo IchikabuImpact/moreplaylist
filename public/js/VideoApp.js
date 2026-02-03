@@ -103,6 +103,10 @@ async createPlaylist(playlistName, playlistPrivacy, videoId) {
         const playlistId = event.target.value;
         if (playlistId) {
             const originalUrl = `${window.location.origin}/Index?feed_url=${encodeURIComponent(`https://www.youtube.com/playlist?list=${playlistId}`)}`;
+            const hiddenOriginal = document.getElementById('share_url_shorten');
+            if (hiddenOriginal) {
+                hiddenOriginal.value = originalUrl;
+            }
             try {
                 const shortUrl = await this.generateShortUrl(originalUrl);
                 document.getElementById('feed_share_url').value = shortUrl;
@@ -349,4 +353,3 @@ feeds_from_feed_url(feedUrl) {
 
 
 }
-

@@ -25,10 +25,6 @@ error_reporting(E_ALL);
 ini_set('log_errors', 1);
 ini_set('error_log', __DIR__ . '/../logs/error.log');
 
-define('SHORTEN_URL_API', 'https://st.pinkgold.space/api/v2/links');
-define('SHORTEN_URL_API_KEY', '3FvBSwHlcBPLtTRPJnxyftsJDI58ZOT8u5w8QwLG');
-
-
 $container = new Container();
 AppFactory::setContainer($container);
 
@@ -66,4 +62,3 @@ $app->add($errorMiddleware);
 require __DIR__ . '/../src/routes.php';
 
 $app->run();
-

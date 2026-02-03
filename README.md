@@ -86,6 +86,58 @@ npm test
    - `Math.random`, `Date`, etc. for determinism
 4. Keep tests focused on current behavior; prefer “given input → output/DOM update” checks.
 
+## URL短縮機能 (SQLite)
+
+MorePlaylist にはアプリ内短縮URL機能が含まれます。`/Index` で生成される長いURLは `/shorten-url.php` で短縮され、`/s/{code}` 形式で配布されます。
+
+### 環境変数
+
+| 変数名 | 説明 | デフォルト |
+| --- | --- | --- |
+| `SHORTURL_DB_PATH` | SQLite DBの保存先 | `/var/lib/moreplaylist/shorturl.sqlite` |
+| `SHORTURL_BASE_URL` | 短縮URLのベースURL | 現在のHostから自動構築 |
+
+### SQLite 初期化/権限
+
+1. DB保存先ディレクトリを作成し、Apacheユーザーに書き込み権限を付与します。
+   ```bash
+   sudo mkdir -p /var/lib/moreplaylist
+   sudo chown www-data:www-data /var/lib/moreplaylist
+   sudo chmod 775 /var/lib/moreplaylist
+   ```
+2. 初回アクセス時にアプリが自動で `short_urls` テーブルを作成します。
+
+### 期限切れデータの削除
+
+1日1回のcron例:
+```bash
+0 4 * * * /usr/bin/php /var/www/moreplaylist/scripts/cleanup-short-urls.php
+```
+
+### 動作確認 (curl)
+
+```bash
+curl -X POST https://example.com/shorten-url.php \
+  -H "Content-Type: application/json" \
+  -d '{"originalUrl":"https://example.com/Index?feed_url=https%3A%2F%2Fwww.youtube.com%2Fplaylist%3Flist%3DPL123"}'
+
+curl -I https://example.com/s/Abc1234
+```
+
+### dev/prod 切り替えの例
+
+dev (`/var/www/moreplaylistdev`):
+```bash
+export SHORTURL_DB_PATH=/var/lib/moreplaylist/shorturl-dev.sqlite
+export SHORTURL_BASE_URL=https://dev.example.com
+```
+
+prod (`/var/www/moreplaylist`):
+```bash
+export SHORTURL_DB_PATH=/var/lib/moreplaylist/shorturl.sqlite
+export SHORTURL_BASE_URL=https://example.com
+```
+
 ## License
 
 This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
