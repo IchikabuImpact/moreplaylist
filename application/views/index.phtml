@@ -51,127 +51,148 @@
     <script src="/js/inline-scripts.js"></script>
 </head>
 <body>
-    <div class="header"></div>
-    <input type="checkbox" class="openSidebarMenu" id="openSidebarMenu">
-    <label for="openSidebarMenu" class="sidebarIconToggle">
-        <div class="spinner diagonal part-1"></div>
-        <div class="spinner horizontal"></div>
-        <div class="spinner diagonal part-2"></div>
-    </label>
-    <div id="sidebarMenu">
-        <ul class="sidebarMenuInner">
+    <header class="topbar">
+        <a class="topbar__logo" href="/Index/">
+            <img src="/images/moreplaylist.png" alt="More Playlist">
+        </a>
+        <div class="topbar__actions">
             <?php if (!isset($_SESSION['user_name'])): ?>
-            <li>
-                <a href="/Index/oauth" class="google-btn">
+                <a href="/Index/oauth" class="google-btn topbar__cta">
                     <img src="/images/sign-in-with-google.png" alt="Sign in with Google">
                 </a>
-            </li>
             <?php endif; ?>
             <?php if (isset($_SESSION['user_name'])): ?>
-                <li><a href="#" id="logoutLink" class="logout-link">Logout</a></li>
+                <div class="topbar__user">
+                    <span><?php echo htmlspecialchars($_SESSION['user_name']); ?></span>
+                    <a href="#" id="logoutLink" class="logout-link topbar__logout">Logout</a>
+                </div>
             <?php endif; ?>
-            <li>
-                <p>Search by keyword:</p>
-                <form id="keywordForm" action="javascript:void(0);">
-                    <input type="search" name="keyword" id="keyword" value="Lo-Fi">
-                    <input type="submit" value="SEARCH">
-                </form>
-            </li>
-            <li>
-                <p>Your Playlists:</p>
-                <form id="playlistForm" action="javascript:void(0);">
-                    <select id="playlists" name="playlists">
-                        <!-- playlist here -->
-                    </select>
-                    <p>Save Video to Playlist:</p>
-                    <input type="text" id="new_playlist_title" name="new_playlist_title" placeholder="New Playlist Name">
-                    <select id="new_playlist_privacy" name="new_playlist_privacy">
-                        <option value="public">public</option>
-                        <option value="private">private</option>
-                    </select>
-                    <button type="button" id="add_to_new_playlist">New</button>
-                    <button type="button" id="add_to_existing_playlist">Existing</button>
-                </form>
-            </li>
-            <li>
-                <div id="social_area">
-                    <form name="f1" id="f1" data-ajax="false">
-                        <div id="share_feed_area">
-                            <div id="share_url">
-                                <?php if (isset($_SESSION['token'])) {
-                                    $token = json_decode($_SESSION['token'], true);
-                                    if (isset($token['access_token'])): ?>
-                                        <p>Share Playlist by URL:</p>
-                                        <input type="hidden" id="share_url_shorten" size="20" value="">
-                                        <input type="text" id="feed_share_url" name="feed_share_url" value="" readonly>
-                                        <button id="copyButton" data-ajax="false">Copy</button>
-                                    <?php endif;
-                                } ?>
+        </div>
+    </header>
+    <div class="app-shell">
+        <input type="checkbox" class="openSidebarMenu" id="openSidebarMenu">
+        <label for="openSidebarMenu" class="sidebarIconToggle" aria-label="Open menu">
+            <div class="spinner diagonal part-1"></div>
+            <div class="spinner horizontal"></div>
+            <div class="spinner diagonal part-2"></div>
+        </label>
+        <div id="sidebarMenu">
+            <ul class="sidebarMenuInner">
+                <li>
+                    <p>Search by keyword:</p>
+                    <form id="keywordForm" action="javascript:void(0);">
+                        <input type="search" name="keyword" id="keyword" value="Lo-Fi">
+                        <input type="submit" value="SEARCH">
+                    </form>
+                </li>
+                <li>
+                    <p>Your Playlists:</p>
+                    <form id="playlistForm" action="javascript:void(0);">
+                        <select id="playlists" name="playlists">
+                            <!-- playlist here -->
+                        </select>
+                        <div class="playlist-save">
+                            <p>Save Video to Playlist:</p>
+                            <input type="text" id="new_playlist_title" name="new_playlist_title" placeholder="New Playlist Name">
+                            <select id="new_playlist_privacy" name="new_playlist_privacy">
+                                <option value="public">public</option>
+                                <option value="private">private</option>
+                            </select>
+                            <div class="action-row">
+                                <button type="button" id="add_to_new_playlist">New</button>
+                                <button type="button" id="add_to_existing_playlist">Existing</button>
                             </div>
                         </div>
                     </form>
-                </div>
-            </li>
-            <li>
-                <button id="shuffleButton">Shuffle Play</button>
-            </li>
-        </ul>
-    </div>
-    <main>
-        <div class="container">
-            <div id="player_wrapper">
-                <div id="player_area">
-                    <iframe id="player" class="player" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" title="Video Player" width="360" height="260"></iframe>
-                </div>
-                <div id="videoInfo"></div>
-            </div>
-            <div id="video-list">
-                <ul>
-                    <li>
-                        <img src="/images/play_button.png" alt="Play" class="play-button">
-                        <span>We are bulletproof the Eternal - BTS</span>
-                    </li>
-                    <li>
-                        <img src="/images/play_button.png" alt="Play" class="play-button">
-                        <span>Promise - Jimin</span>
-                    </li>
-                    <li>
-                        <img src="/images/play_button.png" alt="Play" class="play-button">
-                        <span>Danger - BTS</span>
-                    </li>
-                    <li>
-                        <img src="/images/play_button.png" alt="Play" class="play-button">
-                        <span>Roller Coaster - Chung Ha</span>
-                    </li>
-                    <li>
-                        <img src="/images/play_button.png" alt="Play" class="play-button">
-                        <span>Don't know what to do - BlackPink</span>
-                    </li>
-                    <li>
-                        <img src="/images/play_button.png" alt="Play" class="play-button">
-                        <span>Pporappippam - Sunmi</span>
-                    </li>
-                </ul>
-            </div>
-            <div id="pagination" class="pagination"></div>
-            <div id="keyword-tags" class="tag-cloud">
-                <p>Keyword PickUp</p>
-                <ul>
-                    <li><a href="#" class="keyword-tag">lo fi spring</a></li>
-                    <li><a href="#" class="keyword-tag">lo fi jazz</a></li>
-                    <li><a href="#" class="keyword-tag">lo fi rain</a></li>
-                    <li><a href="#" class="keyword-tag">lo fi sleep</a></li>
-                    <li><a href="#" class="keyword-tag">lo fi japan</a></li>
-                    <li><a href="#" class="keyword-tag">lo fi anime</a></li>
-                    <li><a href="#" class="keyword-tag">lo fi morning</a></li>
-                    <li><a href="#" class="keyword-tag">lo fi cat</a></li>
-                    <li><a href="#" class="keyword-tag">lo fi winter</a></li>
-                    <li><a href="#" class="keyword-tag">lo fi sad</a></li>
-                    <li><a href="#" class="keyword-tag">lo fi playlist</a></li>
-                </ul>
-            </div>
+                </li>
+                <li>
+                    <div id="social_area">
+                        <form name="f1" id="f1" data-ajax="false">
+                            <div id="share_feed_area">
+                                <div id="share_url">
+                                    <?php if (isset($_SESSION['token'])) {
+                                        $token = json_decode($_SESSION['token'], true);
+                                        if (isset($token['access_token'])): ?>
+                                            <p>Share Playlist by URL:</p>
+                                            <input type="hidden" id="share_url_shorten" size="20" value="">
+                                            <div class="action-row">
+                                                <input type="text" id="feed_share_url" name="feed_share_url" value="" readonly>
+                                                <button id="copyButton" data-ajax="false">Copy</button>
+                                            </div>
+                                        <?php endif;
+                                    } ?>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </li>
+                <li class="sidebar-actions">
+                    <button id="shuffleButton">Shuffle Play</button>
+                </li>
+            </ul>
         </div>
-    </main>
+        <main>
+            <div class="container">
+                <?php if (!isset($_SESSION['user_name'])): ?>
+                <section class="intro-callout">
+                    <p>URLを貼って、流して、リンクで渡す。</p>
+                    <a href="/Index/oauth" class="btn-primary">Sign in with Google</a>
+                </section>
+                <?php endif; ?>
+                <div id="player_wrapper">
+                    <div id="player_area">
+                        <iframe id="player" class="player" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" title="Video Player" width="360" height="260"></iframe>
+                    </div>
+                    <div id="videoInfo"></div>
+                </div>
+                <div id="video-list">
+                    <ul>
+                        <li>
+                            <img src="/images/play_button.png" alt="Play" class="play-button">
+                            <span>We are bulletproof the Eternal - BTS</span>
+                        </li>
+                        <li>
+                            <img src="/images/play_button.png" alt="Play" class="play-button">
+                            <span>Promise - Jimin</span>
+                        </li>
+                        <li>
+                            <img src="/images/play_button.png" alt="Play" class="play-button">
+                            <span>Danger - BTS</span>
+                        </li>
+                        <li>
+                            <img src="/images/play_button.png" alt="Play" class="play-button">
+                            <span>Roller Coaster - Chung Ha</span>
+                        </li>
+                        <li>
+                            <img src="/images/play_button.png" alt="Play" class="play-button">
+                            <span>Don't know what to do - BlackPink</span>
+                        </li>
+                        <li>
+                            <img src="/images/play_button.png" alt="Play" class="play-button">
+                            <span>Pporappippam - Sunmi</span>
+                        </li>
+                    </ul>
+                </div>
+                <div id="pagination" class="pagination"></div>
+                <div id="keyword-tags" class="tag-cloud">
+                    <p>Keyword PickUp</p>
+                    <ul>
+                        <li><a href="#" class="keyword-tag">lo fi spring</a></li>
+                        <li><a href="#" class="keyword-tag">lo fi jazz</a></li>
+                        <li><a href="#" class="keyword-tag">lo fi rain</a></li>
+                        <li><a href="#" class="keyword-tag">lo fi sleep</a></li>
+                        <li><a href="#" class="keyword-tag">lo fi japan</a></li>
+                        <li><a href="#" class="keyword-tag">lo fi anime</a></li>
+                        <li><a href="#" class="keyword-tag">lo fi morning</a></li>
+                        <li><a href="#" class="keyword-tag">lo fi cat</a></li>
+                        <li><a href="#" class="keyword-tag">lo fi winter</a></li>
+                        <li><a href="#" class="keyword-tag">lo fi sad</a></li>
+                        <li><a href="#" class="keyword-tag">lo fi playlist</a></li>
+                    </ul>
+                </div>
+            </div>
+        </main>
+    </div>
     <footer>
         <div class="footer-content">
             <div class="logo">
@@ -195,4 +216,3 @@
     </footer>
 </body>
 </html>
-

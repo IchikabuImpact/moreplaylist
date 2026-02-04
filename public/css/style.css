@@ -1,35 +1,143 @@
+:root {
+    --bg: #0b0b0d;
+    --panel: #141418;
+    --panel2: #1b1b23;
+    --text: #f5f5f7;
+    --muted: #a1a1aa;
+    --accent: #7c5cff;
+    --border: rgba(255, 255, 255, 0.08);
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    --radius: 16px;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
 body {
-    background: url('/images/background-image.webp') no-repeat center center fixed;
-    background-size: cover;
+    background: var(--bg);
+    color: var(--text);
     font-family: 'Roboto', sans-serif;
     padding: 0;
     margin: 0;
+    min-height: 100vh;
 }
 
-.header {
-    display: block;
-    margin: 0 auto;
-    width: 100%;
-    max-width: 100%;
-    box-shadow: none;
-    background-color: #FC466B;
-    height: 60px;
-    overflow: hidden;
-    z-index: 10;
-    padding: 10px;
-    box-sizing: border-box;
+a {
+    color: inherit;
+    text-decoration: none;
 }
 
-.main {
-    margin: 0 auto;
+.topbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: rgba(11, 11, 13, 0.9);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+}
+
+.topbar__logo img {
+    height: 36px;
+    width: auto;
     display: block;
-    padding-top: 80px;
+}
+
+.topbar__actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.topbar__cta img {
+    display: block;
+    width: 180px;
+    max-width: 44vw;
+    height: auto;
+    border-radius: 999px;
+    box-shadow: 0 10px 24px rgba(124, 92, 255, 0.35);
+}
+
+.topbar__user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    color: var(--muted);
+}
+
+.topbar__logout {
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 999px;
+    color: var(--text);
+    background: var(--panel2);
+}
+
+.app-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 16px 16px 32px;
+}
+
+.app-shell main {
+    order: 1;
+}
+
+#sidebarMenu {
+    order: 2;
+}
+
+.container {
     width: 100%;
-    box-sizing: border-box;
+    max-width: 980px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.intro-callout {
+    padding: 20px;
+    background: var(--panel);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    text-align: center;
+    box-shadow: var(--shadow);
+}
+
+.intro-callout p {
+    margin: 0 0 12px;
+    font-size: 16px;
+    color: var(--text);
+}
+
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 20px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+    letter-spacing: 0.02em;
 }
 
 #player_wrapper {
-    padding: 20px; /* 余白を追加 */
+    padding: 20px;
+    background: var(--panel);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
 }
 
 #player_area {
@@ -39,12 +147,13 @@ body {
 }
 
 #video-list {
-    background-color: rgba(255, 255, 255, 0.7); /* 薄めの背景色を追加 */
+    background-color: var(--panel);
     padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    margin: 20px auto;
-    max-width: 800px; /* 動画一覧の最大幅を設定 */
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    margin: 0 auto;
+    width: 100%;
     z-index: 1;
 }
 
@@ -57,15 +166,28 @@ body {
     display: flex;
     align-items: center;
     position: relative;
-    padding-left: 0; /* 元の状態に戻す */
-    margin-bottom: 10px; /* 各リストアイテムの下に余白を追加 */
+    padding: 12px 10px;
+    border-radius: 12px;
+    gap: 12px;
+    margin-bottom: 8px;
+    background: var(--panel2);
+    border: 1px solid transparent;
 }
 
-.play-button, .pause-button {
-    width: 24px; /* テキストと同じサイズに調整 */
-    height: 24px;
+#video-list ul li:hover {
+    border-color: var(--accent);
+}
+
+.play-button,
+.pause-button {
+    width: 32px;
+    height: 32px;
     cursor: pointer;
-    margin-right: 8px;
+    margin-right: 4px;
+    border-radius: 50%;
+    background: var(--panel);
+    padding: 6px;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
 }
 
 #video-list span {
@@ -73,24 +195,25 @@ body {
 }
 
 #pagination {
-    text-align: center; /* ページングリンクを中央揃え */
-    margin: 20px auto; /* 上下に余白を追加 */
+    text-align: center;
+    margin: 0 auto;
 }
 
 #pagination a {
-    color: #4a4a4a;
+    color: var(--text);
     text-decoration: none;
-    padding: 10px 20px;
+    padding: 10px 16px;
     margin: 0 5px;
-    background-color: #ffffff;
-    border: 1px solid #4a4a4a;
-    border-radius: 5px;
-    transition: background-color 0.3s, color 0.3s;
+    background-color: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
 }
 
 #pagination a:hover {
-    background-color: #4a4a4a;
+    background-color: var(--accent);
     color: #ffffff;
+    border-color: transparent;
 }
 
 #playlistarea{
@@ -99,12 +222,13 @@ body {
     text-align: center;
 }
 #keyword-tags {
-    background-color: rgba(255, 255, 255, 0.7); /* 動画一覧と同様の背景色 */
+    background-color: var(--panel);
     padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    margin: 20px auto;
-    max-width: 800px; /* タグクラウドの最大幅を設定 */
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    margin: 0 auto;
+    width: 100%;
     text-align: center;
 }
 
@@ -127,62 +251,57 @@ body {
 
 #keyword-tags ul li a {
     text-decoration: none;
-    color: #4a4a4a;
-    background-color: #ffffff;
-    padding: 10px 15px;
-    border-radius: 5px;
-    border: 1px solid #4a4a4a;
-    transition: background-color 0.3s, color 0.3s;
+    color: var(--text);
+    background-color: var(--panel2);
+    padding: 10px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
     display: inline-block;
     font-size: 14px;
 }
 
 #keyword-tags ul li a:hover {
-    background-color: #4a4a4a;
+    background-color: var(--accent);
     color: #ffffff;
+    border-color: transparent;
 }
 
 #sidebarMenu {
-    height: 100%;
-    position: fixed;
-    left: 0;
-    width: 250px;
-    margin-top: 0px;
-    transform: translateX(-250px);
-    transition: transform 250ms ease-in-out;
-    background: linear-gradient(180deg, #FC466B 0%, #3F5EFB 100%);
-    box-sizing: border-box;
-    padding: 10px;
-    z-index: 1000;
+    width: 100%;
+    background: var(--panel);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 20px;
+    box-shadow: var(--shadow);
 }
 
 .sidebarMenuInner {
     margin: 0;
     padding: 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.10);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .sidebarMenuInner li {
     list-style: none;
-    color: #fff;
-    text-transform: uppercase;
-    font-weight: bold;
-    padding: 10px 0;
-    cursor: pointer;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.10);
-    box-sizing: border-box;
+    color: var(--text);
+    font-weight: 600;
+    padding: 0;
+    cursor: default;
+    border: 0;
 }
 
 .sidebarMenuInner li span {
     display: block;
     font-size: 14px;
-    color: rgba(255, 255, 255, 0.50);
+    color: var(--muted);
 }
 
 .sidebarMenuInner li a {
-    color: #fff;
-    text-transform: uppercase;
-    font-weight: bold;
+    color: var(--text);
+    font-weight: 600;
     cursor: pointer;
     text-decoration: none;
     display: block;
@@ -202,12 +321,13 @@ input[type=checkbox] {
     transition: all 0.3s;
     box-sizing: border-box;
     cursor: pointer;
-    position: absolute;
-    z-index: 99;
+    position: fixed;
+    z-index: 999;
     height: 22px;
     width: 22px;
-    top: 22px;
-    left: 15px;
+    top: 18px;
+    left: 16px;
+    display: none;
 }
 
 .spinner {
@@ -263,11 +383,11 @@ input[type=checkbox]:checked ~ .sidebarIconToggle > .diagonal.part-2 {
 }
 
 footer {
-    background-color: #f8f8f8;
-    color: #4a4a4a;
-    padding: 20px 0;
+    background-color: #0f0f14;
+    color: var(--muted);
+    padding: 24px 0;
     text-align: center;
-    border-top: 1px solid #ececec;
+    border-top: 1px solid var(--border);
 }
 
 .footer-content {
@@ -291,13 +411,13 @@ footer {
 }
 
 .footer-content .about-links ul li a {
-    color: #4a4a4a;
+    color: var(--muted);
     text-decoration: none;
     transition: color 0.3s ease;
 }
 
 .footer-content .about-links ul li a:hover {
-    color: #6c63ff;
+    color: var(--accent);
 }
 
 .footer-content .user-info {
@@ -305,17 +425,146 @@ footer {
 }
 
 .logout-link {
-    color: #fff !important; /* 目立つ白色 */
-    font-weight: bold;
-    text-decoration: none !important; /* 下線を無効化 */
-    padding: 5px 10px; /* 余白を追加 */
-    border-radius: 5px; /* 角を丸く */
-    display: inline-block; /* インラインブロック要素に */
+    color: #fff !important;
+    font-weight: 600;
+    text-decoration: none !important;
+    padding: 6px 12px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
 }
 
 .logout-link:hover {
-    color: #ffffff !important; /* ホバー時のテキストカラー */
-    background-color: #ff0000 !important; /* ホバー時の背景色 */
-    text-decoration: none !重要; /* 下線を無効化 */
+    color: #ffffff !important;
+    background-color: var(--accent) !important;
+    text-decoration: none !important;
 }
 
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+input[type="search"],
+input[type="text"],
+select {
+    width: 100%;
+    min-height: 44px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: #0f0f15;
+    color: var(--text);
+    padding: 0 12px;
+}
+
+input[type="submit"],
+button {
+    min-height: 44px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--panel2);
+    color: var(--text);
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0 18px;
+}
+
+input[type="submit"]:hover,
+button:hover {
+    border-color: var(--accent);
+    color: #fff;
+}
+
+input[type="submit"]:focus-visible,
+button:focus-visible,
+input[type="search"]:focus-visible,
+input[type="text"]:focus-visible,
+select:focus-visible,
+a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+#shuffleButton::before {
+    content: "🔀";
+    margin-right: 8px;
+}
+
+#add_to_new_playlist::before,
+#add_to_existing_playlist::before {
+    content: "➕";
+    margin-right: 8px;
+}
+
+#copyButton::before {
+    content: "🔗";
+    margin-right: 8px;
+}
+
+.action-row {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.playlist-save {
+    padding: 16px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-actions {
+    position: sticky;
+    bottom: 16px;
+    z-index: 2;
+}
+
+#share_url input[type="text"] {
+    flex: 1;
+}
+
+@media (min-width: 768px) {
+    .topbar__cta img {
+        width: 200px;
+    }
+
+    .action-row {
+        flex-direction: row;
+        align-items: center;
+    }
+}
+
+@media (min-width: 1024px) {
+    .app-shell {
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 32px;
+        padding: 24px 40px 48px;
+    }
+
+    #sidebarMenu {
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 280px;
+        transform: translateX(-280px);
+        transition: transform 250ms ease-in-out;
+        border-radius: 0;
+        padding-top: 96px;
+        z-index: 900;
+    }
+
+    .sidebarIconToggle {
+        display: block;
+    }
+
+    .container {
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
