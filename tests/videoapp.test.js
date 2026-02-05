@@ -32,19 +32,23 @@ describe('VideoApp characterization', () => {
     expect(src).toContain(`origin=${window.location.origin}`);
   });
 
-  it('updateButtonState toggles play/pause classes and image', () => {
-    const button = document.createElement('img');
+  it('updateButtonState toggles play/pause classes and aria state', () => {
+    const button = document.createElement('button');
     button.classList.add('play-button');
 
     app.updateButtonState(button, true);
     expect(button.classList.contains('pause-button')).toBe(true);
     expect(button.classList.contains('play-button')).toBe(false);
-    expect(button.getAttribute('src')).toBe('/images/pause_button.png');
+    expect(button.classList.contains('is-playing')).toBe(true);
+    expect(button.getAttribute('aria-label')).toBe('Pause');
+    expect(button.getAttribute('aria-pressed')).toBe('true');
 
     app.updateButtonState(button, false);
     expect(button.classList.contains('play-button')).toBe(true);
     expect(button.classList.contains('pause-button')).toBe(false);
-    expect(button.getAttribute('src')).toBe('/images/play_button.png');
+    expect(button.classList.contains('is-playing')).toBe(false);
+    expect(button.getAttribute('aria-label')).toBe('Play');
+    expect(button.getAttribute('aria-pressed')).toBe('false');
   });
 
   it('handlePlaylistChange writes the shortened URL on success', async () => {
@@ -80,8 +84,8 @@ describe('VideoApp characterization', () => {
     const list = document.getElementById('video-list');
     list.innerHTML = `
       <ul>
-        <li><img class="play-button" data-video-id="id-one" /></li>
-        <li><img class="play-button" data-video-id="id-two" /></li>
+        <li><button class="mp-playpause play-button" data-video-id="id-one"></button></li>
+        <li><button class="mp-playpause play-button" data-video-id="id-two"></button></li>
       </ul>
     `;
 
