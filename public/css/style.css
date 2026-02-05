@@ -552,20 +552,20 @@ a:focus-visible {
     }
 
     #sidebarMenu {
-        position: fixed;
-        left: 0;
-        top: 0;
-        height: 100%;
+        position: sticky;
+        top: 96px;
+        height: calc(100vh - 120px);
         width: 280px;
-        transform: translateX(-280px);
-        transition: transform 250ms ease-in-out;
+        transform: none;
+        transition: none;
+        overflow-y: auto;
         border-radius: 0;
-        padding-top: 96px;
+        padding-top: 20px;
         z-index: 900;
     }
 
     .sidebarIconToggle {
-        display: block;
+        display: none;
     }
 
     .container {
