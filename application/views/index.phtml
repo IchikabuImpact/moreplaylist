@@ -57,8 +57,8 @@
         </a>
         <div class="topbar__actions">
             <?php if (!isset($_SESSION['user_name'])): ?>
-                <a href="/Index/oauth" class="google-btn topbar__cta">
-                    <img src="/images/sign-in-with-google.png" alt="Sign in with Google">
+                <a href="/Index/oauth" class="google-btn topbar__cta" aria-label="Sign in with Google">
+                    <img src="/images/web_light_rd_SI@1x.png" alt="Sign in with Google">
                 </a>
             <?php endif; ?>
             <?php if (isset($_SESSION['user_name'])): ?>
@@ -136,7 +136,9 @@
                 <?php if (!isset($_SESSION['user_name'])): ?>
                 <section class="intro-callout">
                     <p>URLを貼って、流して、リンクで渡す。</p>
-                    <a href="/Index/oauth" class="btn-primary">Sign in with Google</a>
+                    <a href="/Index/oauth" class="google-btn google-btn--inline" aria-label="Sign in with Google">
+                        <img src="/images/web_light_rd_SI@1x.png" alt="Sign in with Google">
+                    </a>
                 </section>
                 <?php endif; ?>
                 <div id="player_wrapper">
