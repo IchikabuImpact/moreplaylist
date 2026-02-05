@@ -140,7 +140,7 @@ async createPlaylist(playlistName, playlistPrivacy, videoId) {
                             }
                             videoListHtml += `
                                 <li>
-                                    <img src="/images/play_button.png" alt="Play" class="play-button" data-video-id="${video.videoId}">
+                                    <button class="mp-playpause play-button" type="button" data-video-id="${video.videoId}" aria-label="Play" aria-pressed="false"></button>
                                     <span>${video.title}</span>
                                 </li>
                             `;
@@ -195,7 +195,10 @@ async createPlaylist(playlistName, playlistPrivacy, videoId) {
 
     attachClickEvents() {
         console.log('attachClickEvents called');
-        $('#video-list').on('click', 'img.play-button', (event) => {
+        $('#video-list').off('click', 'button.mp-playpause.play-button');
+        $('#video-list').off('click', 'button.mp-playpause.pause-button');
+
+        $('#video-list').on('click', 'button.mp-playpause.play-button', (event) => {
             event.preventDefault();
             const button = event.target;
             const videoId = $(button).data('video-id');
@@ -206,7 +209,7 @@ async createPlaylist(playlistName, playlistPrivacy, videoId) {
             this.updateButtonState(button, true);
         });
 
-        $('#video-list').on('click', 'img.pause-button', (event) => {
+        $('#video-list').on('click', 'button.mp-playpause.pause-button', (event) => {
             event.preventDefault();
             const button = event.target;
             console.log('Pause button clicked');
@@ -219,21 +222,17 @@ async createPlaylist(playlistName, playlistPrivacy, videoId) {
     }
 
     resetPauseButtons() {
-        $('#video-list img.pause-button').each((index, button) => {
+        $('#video-list button.mp-playpause.pause-button').each((index, button) => {
             this.updateButtonState(button, false);
         });
     }
 
     updateButtonState(button, isPlaying) {
-        if (isPlaying) {
-            button.src = '/images/pause_button.png';
-            button.classList.remove('play-button');
-            button.classList.add('pause-button');
-        } else {
-            button.src = '/images/play_button.png';
-            button.classList.remove('pause-button');
-            button.classList.add('play-button');
-        }
+        button.classList.toggle('is-playing', isPlaying);
+        button.classList.toggle('pause-button', isPlaying);
+        button.classList.toggle('play-button', !isPlaying);
+        button.setAttribute('aria-pressed', String(isPlaying));
+        button.setAttribute('aria-label', isPlaying ? 'Pause' : 'Play');
     }
 
     updatePlaylistsDropdown() {
@@ -270,7 +269,7 @@ async createPlaylist(playlistName, playlistPrivacy, videoId) {
         const videoItems = $('#video-list').find('li');
         if (videoItems.length > 0) {
             const randomIndex = Math.floor(Math.random() * videoItems.length);
-            const randomVideoId = $(videoItems[randomIndex]).find('.play-button').data('video-id');
+            const randomVideoId = $(videoItems[randomIndex]).find('.mp-playpause').data('video-id');
             this.playVideo(randomVideoId);
         } else {
             console.error('No videos found');
@@ -301,7 +300,7 @@ feeds_from_feed_url(feedUrl) {
                         }
                         videoListHtml += `
                             <li>
-                                <img src="/images/play_button.png" alt="Play" class="play-button" data-video-id="${video.videoId}">
+                                <button class="mp-playpause play-button" type="button" data-video-id="${video.videoId}" aria-label="Play" aria-pressed="false"></button>
                                 <span>${video.title}</span>
                             </li>
                         `;

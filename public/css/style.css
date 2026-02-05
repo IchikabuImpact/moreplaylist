@@ -183,24 +183,68 @@ a {
     border-color: var(--accent);
 }
 
-.play-button,
-.pause-button {
-    width: 32px;
-    height: 32px;
+
+.mp-playpause{
+    --btn-size: 56px;
+    --icon-color: #ffffff;
+    --btn-bg: #14161b;
+    --btn-border: #2a2f3a;
+    --glow: rgba(180,120,255,.35);
+
+    width: var(--btn-size);
+    height: var(--btn-size);
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: 999px;
+    background: radial-gradient(circle at 30% 25%, rgba(255,255,255,.08), transparent 55%), var(--btn-bg);
+    border: 1px solid var(--btn-border);
+    box-shadow: 0 10px 24px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.04) inset;
+    display: inline-grid;
+    place-items: center;
     cursor: pointer;
-    margin-right: 4px;
-    border-radius: 50%;
-    background: var(--panel);
-    padding: 6px;
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
+    padding: 0;
+    position: relative;
+    touch-action: manipulation;
+    flex-shrink: 0;
 }
 
-.play-button {
-    filter: brightness(0) invert(0.95);
+.mp-playpause:focus-visible{
+    outline: none;
+    box-shadow: 0 0 0 3px var(--glow), 0 10px 24px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.06) inset;
 }
 
-.pause-button {
-    filter: brightness(0) invert(0.85);
+.mp-playpause:active{
+    transform: translateY(1px);
+}
+
+.mp-playpause::before{
+    content:"";
+    width: 0;
+    height: 0;
+    border-top: 10px solid transparent;
+    border-bottom: 10px solid transparent;
+    border-left: 16px solid var(--icon-color);
+    transform: translateX(2px);
+}
+
+.mp-playpause.is-playing::before{
+    content:"";
+    width: 6px;
+    height: 18px;
+    background: var(--icon-color);
+    border-radius: 2px;
+    border: 0;
+    transform: translate(-6px, 0);
+}
+
+.mp-playpause.is-playing::after{
+    content:"";
+    width: 6px;
+    height: 18px;
+    background: var(--icon-color);
+    border-radius: 2px;
+    position: absolute;
+    transform: translate(6px, 0);
 }
 
 #video-list span {

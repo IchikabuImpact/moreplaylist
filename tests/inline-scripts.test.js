@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { loadScript } from './helpers/loadScript.js';
 
 const baseDom = `
-  <img class="play-button" id="play" src="/images/play_button.png" />
-  <img class="pause-button" id="pause" src="/images/pause_button.png" />
+  <button class="mp-playpause play-button" id="play" aria-label="Play" aria-pressed="false"></button>
+  <button class="mp-playpause pause-button is-playing" id="pause" aria-label="Pause" aria-pressed="true"></button>
 `;
 
 describe('inline-scripts characterization', () => {
@@ -18,10 +18,14 @@ describe('inline-scripts characterization', () => {
 
     playButton.click();
     expect(playButton.classList.contains('pause-button')).toBe(true);
-    expect(playButton.getAttribute('src')).toBe('/images/pause_button.png');
+    expect(playButton.classList.contains('is-playing')).toBe(true);
+    expect(playButton.getAttribute('aria-label')).toBe('Pause');
+    expect(playButton.getAttribute('aria-pressed')).toBe('true');
 
     pauseButton.click();
     expect(pauseButton.classList.contains('play-button')).toBe(true);
-    expect(pauseButton.getAttribute('src')).toBe('/images/play_button.png');
+    expect(pauseButton.classList.contains('is-playing')).toBe(false);
+    expect(pauseButton.getAttribute('aria-label')).toBe('Play');
+    expect(pauseButton.getAttribute('aria-pressed')).toBe('false');
   });
 });

@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
                                         }
                                         videoListHtml += `
                                             <li>
-                                                <img src="/images/play_button.png" alt="Play" class="play-button" data-video-id="${video.videoId}">
+                                                <button class="mp-playpause play-button" type="button" data-video-id="${video.videoId}" aria-label="Play" aria-pressed="false"></button>
                                                 <span>${video.title}</span>
                                             </li>
                                         `;
@@ -76,10 +76,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
                                     }
 
                                     // 再生ボタンにイベントリスナーを追加
-                                    $('.play-button').on('click', function() {
-                                        const videoId = $(this).data('video-id');
-                                        videoApp.playVideo(videoId);
-                                    });
+                                    videoApp.attachClickEvents();
                                 } else {
                                     throw new Error('Invalid data format');
                                 }
