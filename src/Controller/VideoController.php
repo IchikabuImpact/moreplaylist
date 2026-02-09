@@ -5,7 +5,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use App\Utils\SessionManager;
 use App\Utils\LogManager;
-use Google\Client;
+use App\Utils\GoogleClientFactory;
 use Google\Service\YouTube;
 
 class VideoController
@@ -17,17 +17,9 @@ class VideoController
     public function __construct(SessionManager $session, LogManager $logManager)
     {
         $this->session = $session;
-        $this->client = new Client();
-        $this->client->setAuthConfig(__DIR__ . '/../../client_secret.json');
-        $this->client->setDeveloperKey($_SERVER['GOOGLE_DEVELOPER_KEY']);
-        $this->client->setScopes([
-            'https://www.googleapis.com/auth/youtube',
-            'https://www.googleapis.com/auth/youtube.force-ssl',
-            'https://www.googleapis.com/auth/userinfo.email',
-            'https://www.googleapis.com/auth/userinfo.profile'
-        ]);
-        $this->client->setRedirectUri('https://' . $_SERVER['HTTP_HOST'] . '/Index/oauth');
-        $this->client->setAccessType('offline');
+        $factory = new GoogleClientFactory();
+        $developerKey = $_SERVER['GOOGLE_DEVELOPER_KEY'] ?? null;
+        $this->client = $factory->create($developerKey);
         $this->logger = $logManager->getLogger();
     }
 
@@ -58,6 +50,47 @@ class VideoController
             $this->logger->warning('Session token does not exist.');
         }
         return false;
+    }
+
+    private function unauthorizedResponse(Response $response): Response
+    {
+        $payload = [
+            'error' => [
+                'code' => 40100,
+                'message' => 'unauthorized',
+                'data' => [
+                    'loginUrl' => '/Index/oauth',
+                ],
+            ],
+        ];
+        $response->getBody()->write(json_encode($payload, JSON_UNESCAPED_UNICODE));
+        return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
+    }
+
+    public function isAuthenticated(): bool
+    {
+        return $this->authenticateClient();
+    }
+
+    public function listPlaylists(): array
+    {
+        $youtube = new YouTube($this->client);
+
+        $playlistsResponse = $youtube->playlists->listPlaylists('id,snippet,status', [
+            'mine' => true,
+            'maxResults' => 20,
+        ]);
+
+        $data = [];
+        foreach ($playlistsResponse->items as $item) {
+            $data[] = [
+                'title' => $item->snippet->title,
+                'playlistId' => $item->id,
+                'status' => $item->status->privacyStatus,
+            ];
+        }
+
+        return $data;
     }
 
 public function getVideos(Request $request, Response $response, $args)
@@ -143,15 +176,9 @@ private function extractPlaylistId($feedUrl)
 
     public static function getVideosByKeyword($keyword)
     {
-        $client = new Client();
-        $client->setAuthConfig('/var/www/moreplaylistdev/client_secret.json');
-        $client->setDeveloperKey($_SERVER['GOOGLE_DEVELOPER_KEY']);
-        $client->setScopes([
-            'https://www.googleapis.com/auth/youtube',
-            'https://www.googleapis.com/auth/youtube.force-ssl',
-            'https://www.googleapis.com/auth/userinfo.email',
-            'https://www.googleapis.com/auth/userinfo.profile'
-        ]);
+        $factory = new GoogleClientFactory();
+        $developerKey = $_SERVER['GOOGLE_DEVELOPER_KEY'] ?? null;
+        $client = $factory->create($developerKey);
 
         $youtube = new YouTube($client);
 
@@ -191,26 +218,11 @@ private function extractPlaylistId($feedUrl)
     public function getPlaylists(Request $request, Response $response, $args)
     {
         if (!$this->authenticateClient()) {
-            return $response->withHeader('Location', '/logout')->withStatus(302);
+            return $this->unauthorizedResponse($response);
         }
 
-        $youtube = new YouTube($this->client);
-
         try {
-            $playlistsResponse = $youtube->playlists->listPlaylists('id,snippet,status', [
-                'mine' => true,
-                'maxResults' => 20,
-            ]);
-
-            $data = [];
-            foreach ($playlistsResponse->items as $item) {
-                $data[] = [
-                    'title' => $item->snippet->title,
-                    'playlistId' => $item->id,
-                    'status' => $item->status->privacyStatus,
-                ];
-            }
-
+            $data = $this->listPlaylists();
             $this->logger->info('Playlists fetched: ' . json_encode($data));
 
             $json = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
@@ -232,7 +244,7 @@ private function extractPlaylistId($feedUrl)
     public function getPlaylistVideos(Request $request, Response $response, $args)
     {
         if (!$this->authenticateClient()) {
-            return $response->withHeader('Location', '/logout')->withStatus(302);
+            return $this->unauthorizedResponse($response);
         }
 
         $playlistId = $request->getQueryParams()['playlistId'];
@@ -287,15 +299,9 @@ private function extractPlaylistId($feedUrl)
 
     public static function getVideosFromPlaylist($playlistId, $pageToken = null)
     {
-        $client = new Client();
-        $client->setAuthConfig('/var/www/moreplaylistdev/client_secret.json');
-        $client->setDeveloperKey($_SERVER['GOOGLE_DEVELOPER_KEY']);
-        $client->setScopes([
-            'https://www.googleapis.com/auth/youtube',
-            'https://www.googleapis.com/auth/youtube.force-ssl',
-            'https://www.googleapis.com/auth/userinfo.email',
-            'https://www.googleapis.com/auth/userinfo.profile'
-        ]);
+        $factory = new GoogleClientFactory();
+        $developerKey = $_SERVER['GOOGLE_DEVELOPER_KEY'] ?? null;
+        $client = $factory->create($developerKey);
 
         $youtube = new YouTube($client);
 
@@ -365,7 +371,7 @@ private function extractPlaylistId($feedUrl)
         }
 
         if (!$this->authenticateClient()) {
-            return $response->withHeader('Location', '/logout')->withStatus(302);
+            return $this->unauthorizedResponse($response);
         }
 
         $youtube = new YouTube($this->client);
@@ -420,7 +426,7 @@ private function extractPlaylistId($feedUrl)
         }
 
         if (!$this->authenticateClient()) {
-            return $response->withHeader('Location', '/logout')->withStatus(302);
+            return $this->unauthorizedResponse($response);
         }
 
         $youtube = new YouTube($this->client);
@@ -447,4 +453,3 @@ private function extractPlaylistId($feedUrl)
         }
     }
 }
-
