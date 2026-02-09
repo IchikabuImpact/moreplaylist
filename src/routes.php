@@ -11,6 +11,7 @@ use App\Utils\SessionManager;
 use App\Utils\LogManager;
 use App\Controller\VideoController;
 use App\Controller\IndexController;
+use App\Rpc\RpcDispatcher;
 
 $session = new SessionManager();
 $logManager = new LogManager();
@@ -30,6 +31,7 @@ $allowedUris = [
     '/api/generate-share-url',
     '/api/add-playlist',
     '/api/add-to-existing-playlist',
+    '/api/rpc',
 ];
 
 $uriCheckMiddleware = function (Request $request, RequestHandlerInterface $handler) use ($allowedUris, $app, $logger) {
@@ -79,6 +81,11 @@ function setApiRoutes(RouteCollectorProxy $group, SessionManager $session, LogMa
 
 $app->group('/api', function (RouteCollectorProxy $group) use ($session, $logManager) {
     setApiRoutes($group, $session, $logManager);
+});
+
+$app->post('/api/rpc', function (Request $request, Response $response, $args) use ($session, $logManager) {
+    $dispatcher = new RpcDispatcher($session, $logManager);
+    return $dispatcher->dispatch($request, $response);
 });
 
 $app->get('/csrf-token', function (Request $request, Response $response, $args) use ($session, $logger) {
@@ -167,4 +174,3 @@ $app->get('/Index/share', function (Request $request, Response $response, $args)
     $logger->info('Accessed /Index/share URL', ['feed_url' => $feedUrl]);
     return $view->render($response, 'share.phtml', ['feed_url' => $feedUrl]);
 });
-

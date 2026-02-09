@@ -1,3 +1,5 @@
+import { rpcCall, RpcError } from './apiClient.js';
+
 export default class VideoApp {
     constructor() {
         this.init();
@@ -236,32 +238,39 @@ async createPlaylist(playlistName, playlistPrivacy, videoId) {
     }
 
     updatePlaylistsDropdown() {
-        $.get('/api/playlists', (data) => {
-            console.log('playlists API called, data received:', data);
+        const loadPlaylists = async () => {
             try {
-                if (typeof data === 'string') {
-                    data = JSON.parse(data);
-                }
-
-                if (data.error) {
-                    throw new Error(data.error);
-                }
+                const data = await rpcCall('playlist.list', {});
+                console.log('playlist.list RPC called, data received:', data);
 
                 var $select = $('#playlists');
                 $select.empty();
-                data.forEach(function (playlist) {
+                data.playlists.forEach(function (playlist) {
                     $select.append($('<option></option>')
                         .attr('value', playlist.playlistId)
                         .text(playlist.title + (playlist.status === 'private' ? ' (非公開)' : '')));
                 });
 
                 console.log('Playlists updated:', data);
-
-            } catch (e) {
-                console.error('Error:', e);
-                $('#playlists').after('<p class="error">please login</p>');
+            } catch (error) {
+                console.error('playlist.list RPC error:', error);
+                if (error instanceof RpcError && error.code === 40100) {
+                    this.showLoginPrompt(error.data?.loginUrl || '/Index/oauth');
+                } else {
+                    this.showLoginPrompt('/Index/oauth');
+                }
             }
-        });
+        };
+
+        loadPlaylists();
+    }
+
+    showLoginPrompt(loginUrl) {
+        const $playlists = $('#playlists');
+        $('#playlist-login-prompt').remove();
+        $playlists.after(
+            `<p id="playlist-login-prompt" class="error">ログインしてください: <a href="${loginUrl}">Login</a></p>`
+        );
     }
 
     shufflePlay() {

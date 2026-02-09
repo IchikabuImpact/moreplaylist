@@ -17,7 +17,7 @@ use Slim\Factory\AppFactory;
 use DI\Container;
 use Slim\Middleware\ErrorMiddleware;
 use Slim\Views\PhpRenderer;
-use Google\Client;
+use App\Utils\GoogleClientFactory;
 
 error_reporting(E_ALL);
 
@@ -38,19 +38,8 @@ $container->set('view', function() {
 
 // Google Client の設定
 $container->set('googleClient', function() {
-    $client = new Client();
-    $client->setAuthConfig(__DIR__ . '/../client_secret.json'); // client_secret.jsonのパスを設定
-    $client->setRedirectUri('https://' . $_SERVER['HTTP_HOST'] . '/Index/oauth');
-    $client->setScopes([
-        'https://www.googleapis.com/auth/youtube',
-        'https://www.googleapis.com/auth/youtube.force-ssl',
-        'https://www.googleapis.com/auth/userinfo.email',
-        'https://www.googleapis.com/auth/userinfo.profile'
-    ]);
-    $client->setAccessType('offline');
-    $client->setApprovalPrompt("force");
-    $client->setIncludeGrantedScopes(true);
-    return $client;
+    $factory = new GoogleClientFactory();
+    return $factory->create();
 });
 
 // ミドルウェアの追加
