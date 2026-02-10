@@ -133,6 +133,44 @@ describe('VideoApp characterization', () => {
     expect(src).toContain('vid1');
   });
 
+  it('feeds_from_feed_url sends feed_url and pageToken then renders videos', () => {
+    const ajaxSpy = vi
+      .spyOn(globalThis.$, 'ajax')
+      .mockImplementation(({ success }) => {
+        success({
+          videos: [
+            { videoId: 'feed-vid1', title: 'Feed First' },
+            { videoId: 'feed-vid2', title: 'Feed Second' }
+          ],
+          prevPageToken: null,
+          nextPageToken: 'next-feed-page'
+        });
+      });
+
+    app.feeds_from_feed_url('https://www.youtube.com/playlist?list=PL123');
+
+    expect(ajaxSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: '/api/videos',
+        method: 'GET',
+        data: {
+          feed_url: 'https://www.youtube.com/playlist?list=PL123',
+          pageToken: ''
+        }
+      })
+    );
+
+    const listHtml = document.getElementById('video-list').innerHTML;
+    expect(listHtml).toContain('data-video-id="feed-vid1"');
+    expect(listHtml).toContain('data-video-id="feed-vid2"');
+
+    const paginationHtml = document.getElementById('pagination').innerHTML;
+    expect(paginationHtml).toContain('next-page');
+
+    const src = document.getElementById('player').getAttribute('src');
+    expect(src).toContain('feed-vid1');
+  });
+
   it('createPlaylist posts JSON and refreshes playlists', async () => {
     const updateSpy = vi.spyOn(app, 'updatePlaylistsDropdown').mockImplementation(() => {});
     globalThis.fetch = vi.fn().mockResolvedValue({
