@@ -286,13 +286,13 @@ async createPlaylist(playlistName, playlistPrivacy, videoId) {
         }
     }
 
-feeds_from_feed_url(feedUrl) {
-    console.log('feeds_from_feed_url called with feedUrl:', feedUrl);
+feeds_from_feed_url(feedUrl, pageToken = '') {
+    console.log('feeds_from_feed_url called with feedUrl:', feedUrl, 'and pageToken:', pageToken);
     $('#videoInfo').removeData('current-video-id');
     $.ajax({
         url: '/api/videos',
         method: 'GET',
-        data: { feed_url: feedUrl },
+        data: { feed_url: feedUrl, pageToken: pageToken },
         success: (data) => {
             console.log('feeds_from_feed_url success, data received:', data);
             try {
