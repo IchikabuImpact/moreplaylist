@@ -30,6 +30,15 @@ document.addEventListener('DOMContentLoaded', (event) => {
         videoApp.feeds_from_keyword($('#keyword').val());
     });
 
+    $('#feedUrlForm').on('submit', function (event) {
+        event.preventDefault();
+        const feedUrl = $('#feed_url_input').val().trim();
+        console.log('feedUrlForm submit, feedUrl:', feedUrl);
+        if (feedUrl) {
+            videoApp.feeds_from_feed_url(feedUrl);
+        }
+    });
+
     const initializeLoginState = async () => {
         try {
             const data = await rpcCall('auth.status', {});

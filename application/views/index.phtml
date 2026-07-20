@@ -76,15 +76,9 @@
             <div class="spinner horizontal"></div>
             <div class="spinner diagonal part-2"></div>
         </label>
+        <label for="openSidebarMenu" class="sidebar-backdrop" aria-hidden="true"></label>
         <div id="sidebarMenu">
             <ul class="sidebarMenuInner">
-                <li>
-                    <p>Search by keyword:</p>
-                    <form id="keywordForm" action="javascript:void(0);">
-                        <input type="search" name="keyword" id="keyword" value="Lo-Fi">
-                        <input type="submit" value="SEARCH">
-                    </form>
-                </li>
                 <li>
                     <p>Your Playlists:</p>
                     <form id="playlistForm" action="javascript:void(0);">
@@ -133,6 +127,19 @@
         </div>
         <main>
             <div class="container">
+                <div class="search-bar">
+                    <form id="keywordForm" action="javascript:void(0);" class="search-bar__form">
+                        <label for="keyword" class="sr-only">Search by keyword</label>
+                        <input type="search" name="keyword" id="keyword" value="Lo-Fi" placeholder="キーワードで検索">
+                        <input type="submit" value="SEARCH">
+                    </form>
+                    <span class="search-bar__divider">または</span>
+                    <form id="feedUrlForm" action="javascript:void(0);" class="search-bar__form">
+                        <label for="feed_url_input" class="sr-only">Paste a YouTube playlist URL</label>
+                        <input type="url" name="feed_url" id="feed_url_input" placeholder="プレイリストURLを貼り付け">
+                        <input type="submit" value="LOAD">
+                    </form>
+                </div>
                 <?php if (!isset($_SESSION['user_name'])): ?>
                 <section class="intro-callout">
                     <p>URLを貼って、流して、リンクで渡す。</p>
@@ -143,7 +150,9 @@
                 <?php endif; ?>
                 <div id="player_wrapper">
                     <div id="player_area">
-                        <iframe id="player" class="player" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" title="Video Player" width="360" height="260"></iframe>
+                        <div class="player-frame">
+                            <iframe id="player" class="player" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" title="Video Player"></iframe>
+                        </div>
                     </div>
                     <div id="videoInfo"></div>
                 </div>

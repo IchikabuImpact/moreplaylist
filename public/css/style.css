@@ -232,6 +232,51 @@ a {
     gap: 24px;
 }
 
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.search-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    background: var(--panel);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+}
+
+.search-bar__form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.search-bar__divider {
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+@media (min-width: 480px) {
+    .search-bar__form {
+        flex-direction: row;
+    }
+
+    .search-bar__form input {
+        flex: 1;
+    }
+}
+
 .intro-callout {
     padding: 20px;
     background: var(--panel);
@@ -269,9 +314,27 @@ a {
 }
 
 #player_area {
-   /* margin: 10 auto;*/
-   /* padding: 10px;*/ /* プレイヤー周りに余白を追加 */
-    text-align: center;
+    display: flex;
+    justify-content: center;
+}
+
+.player-frame {
+    position: relative;
+    width: 100%;
+    max-width: 720px;
+    aspect-ratio: 16 / 9;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #000;
+}
+
+.player {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
 }
 
 #video-list {
@@ -448,12 +511,31 @@ a {
 }
 
 #sidebarMenu {
-    width: 100%;
+    width: 85%;
+    max-width: 320px;
     background: var(--panel);
-    border-radius: var(--radius);
+    border-radius: 0 var(--radius) var(--radius) 0;
     border: 1px solid var(--border);
     padding: 20px;
     box-shadow: var(--shadow);
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: 1001;
+}
+
+.sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 1000;
 }
 
 .sidebarMenuInner {
@@ -491,6 +573,11 @@ input[type="checkbox"]:checked ~ #sidebarMenu {
     transform: translateX(0);
 }
 
+input[type="checkbox"]:checked ~ .sidebar-backdrop {
+    opacity: 1;
+    pointer-events: auto;
+}
+
 input[type=checkbox] {
     transition: all 0.3s;
     box-sizing: border-box;
@@ -502,12 +589,17 @@ input[type=checkbox] {
     box-sizing: border-box;
     cursor: pointer;
     position: fixed;
-    z-index: 999;
-    height: 22px;
-    width: 22px;
-    top: 18px;
-    left: 16px;
-    display: none;
+    z-index: 1002;
+    height: 44px;
+    width: 44px;
+    padding: 11px;
+    top: 68px;
+    left: 12px;
+    border-radius: 999px;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    display: block;
 }
 
 .spinner {
@@ -630,6 +722,7 @@ form {
 
 input[type="search"],
 input[type="text"],
+input[type="url"],
 select {
     width: 100%;
     min-height: 44px;
@@ -662,6 +755,7 @@ input[type="submit"]:focus-visible,
 button:focus-visible,
 input[type="search"]:focus-visible,
 input[type="text"]:focus-visible,
+input[type="url"]:focus-visible,
 select:focus-visible,
 a:focus-visible {
     outline: 2px solid var(--accent);
@@ -731,6 +825,7 @@ a:focus-visible {
         top: 96px;
         height: calc(100vh - 120px);
         width: 280px;
+        max-width: none;
         transform: none;
         transition: none;
         overflow-y: auto;
@@ -740,6 +835,10 @@ a:focus-visible {
     }
 
     .sidebarIconToggle {
+        display: none;
+    }
+
+    .sidebar-backdrop {
         display: none;
     }
 
