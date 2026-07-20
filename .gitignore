@@ -42,4 +42,11 @@ node_modules/
 npm-debug.log
 yarn.lock
 package-lock.json
-client_secret*.json
+
+# Google OAuth client secret files (any env: prd/dev/local, any naming)
+*client_secret*.json
+
+# Local WSL dev environment (generated, machine-specific)
+/local/certs/
+/local/apache/moreplaylist-local.conf
+/storage/

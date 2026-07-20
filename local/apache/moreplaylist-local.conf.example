@@ -1,0 +1,42 @@
+# Local WSL Apache vhost for moreplaylist (mirrors the prod Rocky/httpd config
+# in /etc/httpd/conf.d/virtualhost-le-ssl.conf, adapted for Ubuntu/apache2 + a
+# self-signed localhost cert).
+#
+# Deliberately does NOT bind :80 or :443 — this machine hosts other local
+# projects too, and those ports are the ones every other framework's default
+# dev server wants first. moreplaylist lives on its own port instead
+# (default 8443, see MOREPLAYLIST_PORT in scripts/setup-local-wsl.sh).
+# GoogleClientFactory builds the OAuth redirect URI from $_SERVER['HTTP_HOST'],
+# which includes the port automatically, so no code change was needed for this.
+#
+# scripts/setup-local-wsl.sh generates the real, machine-specific version of
+# this file at local/apache/moreplaylist-local.conf (gitignored, because it
+# embeds your GOOGLE_DEVELOPER_KEY) and installs it into
+# /etc/apache2/sites-available/. Do not put real secrets in THIS .example file
+# since it is committed to git.
+
+Listen __HTTPS_PORT__
+
+<VirtualHost *:__HTTPS_PORT__>
+    ServerName localhost
+    DocumentRoot __PROJECT_DIR__/public
+    ErrorLog ${APACHE_LOG_DIR}/moreplaylist_error.log
+    CustomLog ${APACHE_LOG_DIR}/moreplaylist_access.log combined
+    <Directory "__PROJECT_DIR__/public">
+        Options -Indexes +FollowSymLinks
+        AllowOverride All
+        Require all granted
+        # Same env vars the prod vhost sets via SetEnv. GOOGLE_CLIENT_ID/SECRET
+        # are NOT read from env by this app (GoogleClientFactory reads them
+        # from client_secret.json in the project root instead), so only the
+        # developer key + short-URL settings need to be set here.
+        SetEnv GOOGLE_DEVELOPER_KEY "__GOOGLE_DEVELOPER_KEY__"
+        SetEnv SHORTURL_DB_PATH "__PROJECT_DIR__/storage/shorturl.sqlite"
+        SetEnv SHORTURL_BASE_URL "https://localhost:__HTTPS_PORT__"
+        SetEnv APPLICATION_ENV "local"
+    </Directory>
+
+    SSLEngine on
+    SSLCertificateFile __PROJECT_DIR__/local/certs/localhost.pem
+    SSLCertificateKeyFile __PROJECT_DIR__/local/certs/localhost-key.pem
+</VirtualHost>
