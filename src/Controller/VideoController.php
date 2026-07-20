@@ -6,6 +6,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use App\Utils\SessionManager;
 use App\Utils\LogManager;
 use App\Utils\GoogleClientFactory;
+use App\Service\YoutubeVideoService;
 use Google\Service\YouTube;
 
 class VideoController
@@ -13,6 +14,7 @@ class VideoController
     private $client;
     private $session;
     private $logger;
+    private $videoService;
 
     public function __construct(SessionManager $session, LogManager $logManager)
     {
@@ -21,6 +23,7 @@ class VideoController
         $developerKey = $_SERVER['GOOGLE_DEVELOPER_KEY'] ?? null;
         $this->client = $factory->create($developerKey);
         $this->logger = $logManager->getLogger();
+        $this->videoService = new YoutubeVideoService($session, $logManager);
     }
 
     private function authenticateClient()
@@ -109,7 +112,7 @@ class VideoController
         try {
             if ($feedUrl) {
                 $this->logger->info('Feed URL detected', ['feed_url' => $feedUrl]);
-                $playlistId = $this->extractPlaylistId($feedUrl);
+                $playlistId = $this->videoService->extractPlaylistIdFromFeedUrl($feedUrl);
                 if (!$playlistId) {
                     $this->logger->warning('Failed to extract playlist ID from feed URL', ['feed_url' => $feedUrl]);
                     $response->getBody()->write(json_encode([
@@ -210,19 +213,6 @@ class VideoController
             return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
     }
-
-private function extractPlaylistId($feedUrl)
-{
-    $this->logger->info('Extracting playlist ID from feed URL', ['feed_url' => $feedUrl]);
-
-    parse_str(parse_url($feedUrl, PHP_URL_QUERY), $queryParams);
-    $playlistId = $queryParams['list'] ?? null;
-
-    $this->logger->info('Extracted playlist ID from feed URL', ['playlistId' => $playlistId, 'feed_url' => $feedUrl, 'queryParams' => $queryParams]);
-    return $playlistId;
-}
-
-
 
     public static function getVideosByKeyword($keyword)
     {
@@ -339,12 +329,6 @@ private function extractPlaylistId($feedUrl)
             $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
             return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
-    }
-
-    public static function getPlaylistIdFromUrl($url)
-    {
-        parse_str(parse_url($url, PHP_URL_QUERY), $queryParams);
-        return $queryParams['list'] ?? null;
     }
 
     public static function getVideosFromPlaylist($playlistId, $pageToken = null)

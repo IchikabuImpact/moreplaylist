@@ -10,4 +10,10 @@
             <directory suffix="Test.php">tests/server</directory>
         </testsuite>
     </testsuites>
+    <php>
+        <!-- LogManager writes via error_log(), which defaults to STDERR under the
+             CLI SAPI; PHPUnit treats that as unexpected test output and fails the
+             test. Redirect it to a throwaway file for the whole suite instead. -->
+        <ini name="error_log" value="/tmp/moreplaylist-phpunit-error.log"/>
+    </php>
 </phpunit>

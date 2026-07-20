@@ -5,6 +5,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use App\Utils\SessionManager;
 use App\Utils\LogManager;
+use App\Service\YoutubeVideoService;
 use Slim\Views\PhpRenderer;
 
 class IndexController
@@ -12,12 +13,14 @@ class IndexController
     private $session;
     private $logger;
     private $view;
+    private $videoService;
 
     public function __construct(SessionManager $session, LogManager $logManager, PhpRenderer $view)
     {
         $this->session = $session;
         $this->logger = $logManager->getLogger();
         $this->view = $view;
+        $this->videoService = new YoutubeVideoService($session, $logManager);
     }
 
 
@@ -30,7 +33,7 @@ public function handleRootAndIndex(Request $request, Response $response)
     // feed_url を使って検索
     if ($feedUrl) {
         $this->logger->info('Calling getPlaylistIdFromUrl', ['feed_url' => $feedUrl]);
-        $playlistId = VideoController::getPlaylistIdFromUrl($feedUrl);
+        $playlistId = $this->videoService->extractPlaylistIdFromFeedUrl($feedUrl);
         $this->logger->info('Playlist ID obtained', ['playlistId' => $playlistId]);
 
         if ($playlistId) {
