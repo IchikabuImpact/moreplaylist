@@ -126,6 +126,7 @@ options:
 | `SHORTURL_DB_PATH` | `<repo>/storage/shorturl.sqlite` | `/var/lib/moreplaylist/shorturl.sqlite` |
 | `SHORTURL_BASE_URL` | `https://localhost:8443` | unset (derived from Host header) |
 | `APPLICATION_ENV` | `local` | `production` |
+| `GOOGLE_OAUTH_REDIRECT_URI` | unset (derived from local request host) | `https://moreplaylist.appstarrocks.com/Index/oauth` (built-in default) |
 
 `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` are set in the prod vhost via
 `SetEnv` but the app code never reads them (`GoogleClientFactory` only reads
