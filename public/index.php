@@ -1,7 +1,11 @@
 <?php
-// エラーレポートをすべて表示する
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
+require __DIR__ . '/../src/runtime.php';
+
+$displayErrorDetails = App\configureRuntime(
+    $_SERVER['APPLICATION_ENV'] ?? 'production',
+    __DIR__ . '/../logs/error.log'
+);
+
 ini_set('session.cookie_samesite', 'None');
 ini_set('session.cookie_secure', '1');
 
@@ -18,12 +22,6 @@ use DI\Container;
 use Slim\Middleware\ErrorMiddleware;
 use Slim\Views\PhpRenderer;
 use App\Utils\GoogleClientFactory;
-
-error_reporting(E_ALL);
-
-// ログをファイルに出力する設定
-ini_set('log_errors', 1);
-ini_set('error_log', __DIR__ . '/../logs/error.log');
 
 $container = new Container();
 AppFactory::setContainer($container);
@@ -44,7 +42,13 @@ $container->set('googleClient', function() {
 
 // ミドルウェアの追加
 $app->addRoutingMiddleware();
-$errorMiddleware = new ErrorMiddleware($app->getCallableResolver(), $app->getResponseFactory(), true, true, true);
+$errorMiddleware = new ErrorMiddleware(
+    $app->getCallableResolver(),
+    $app->getResponseFactory(),
+    $displayErrorDetails,
+    true,
+    true
+);
 $app->add($errorMiddleware);
 
 // ルーティングの追加
